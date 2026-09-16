@@ -82,10 +82,19 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.Product
 import com.example.data.SampleData
+import com.example.ui.components.TindaCard
+import com.example.ui.theme.BorderElevated
+import com.example.ui.theme.BorderSubtle
+import com.example.ui.theme.BrandSurfaceElevated
+import com.example.ui.theme.BrandSurfaceSoft
+import com.example.ui.theme.EmeraldInteractive
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.InStockGreen
 import com.example.ui.theme.LowStockOrange
 import com.example.ui.theme.OutOfStockRed
+import com.example.ui.theme.TextMuted
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 import com.example.viewmodel.TindaViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -564,15 +573,17 @@ fun InventoryKpiCard(
     color: Color,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    TindaCard(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
-        shape = RoundedCornerShape(12.dp)
+        backgroundColor = BrandSurfaceElevated,
+        borderColor = BorderElevated
     ) {
-        Column(modifier = Modifier.padding(10.dp)) {
-            Text(title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(title, style = MaterialTheme.typography.labelSmall, color = TextMuted, fontSize = 11.sp)
+            Spacer(modifier = Modifier.height(2.dp))
             Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = color)
-            Text(subtitle, style = MaterialTheme.typography.labelSmall, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(subtitle, style = MaterialTheme.typography.labelSmall, fontSize = 10.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -593,19 +604,16 @@ fun ExpirationAlertCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    TindaCard(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .testTag("alert_${label.replace(' ', '_')}"),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) badgeColor.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
-        ),
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, badgeColor) else null,
-        shape = RoundedCornerShape(12.dp)
+        backgroundColor = if (isSelected) badgeColor.copy(alpha = 0.18f) else BrandSurfaceElevated,
+        borderColor = if (isSelected) badgeColor else BorderSubtle
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -623,7 +631,7 @@ fun ExpirationAlertCard(
                     text = "$count",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (count > 0) badgeColor else MaterialTheme.colorScheme.onSurface
+                    color = if (count > 0) badgeColor else TextPrimary
                 )
             }
             Spacer(modifier = Modifier.height(2.dp))
@@ -632,7 +640,7 @@ fun ExpirationAlertCard(
                 style = MaterialTheme.typography.labelSmall,
                 fontSize = 11.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = if (isSelected) badgeColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (isSelected) badgeColor else TextSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -655,12 +663,12 @@ fun InventoryProductCard(
     val isExpiringSoon = expiry != null && expiry > 0L && expiry >= now && expiry <= thirtyDays
     val needsReview = expiry == null || expiry == 0L
 
-    ElevatedCard(
+    TindaCard(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("inventory_item_${product.id}"),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        backgroundColor = BrandSurfaceElevated,
+        borderColor = BorderElevated
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -673,22 +681,24 @@ fun InventoryProductCard(
                         text = product.name,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = product.category,
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline
+                            color = TextSecondary
                         )
                         if (product.barcode.isNotBlank()) {
-                            Text(" • ", color = Color.Gray)
+                            Text(" • ", color = TextMuted)
                             Text(
                                 text = product.barcode,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontFamily = FontFamily.Monospace,
-                                color = MaterialTheme.colorScheme.outline
+                                color = TextMuted
                             )
                         }
                     }
@@ -724,7 +734,7 @@ fun InventoryProductCard(
             }
 
             // Expiry Status Banner
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -735,9 +745,9 @@ fun InventoryProductCard(
                         Row(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(OutOfStockRed.copy(alpha = 0.12f))
+                                .background(OutOfStockRed.copy(alpha = 0.15f))
                                 .clickable(onClick = onReviewExpiry)
-                                .padding(horizontal = 8.dp, vertical = 3.dp),
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = OutOfStockRed, modifier = Modifier.size(14.dp))
@@ -757,7 +767,7 @@ fun InventoryProductCard(
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(LowStockOrange.copy(alpha = 0.15f))
                                 .clickable(onClick = onReviewExpiry)
-                                .padding(horizontal = 8.dp, vertical = 3.dp),
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(Icons.Default.AccessTime, contentDescription = null, tint = LowStockOrange, modifier = Modifier.size(14.dp))
@@ -774,16 +784,16 @@ fun InventoryProductCard(
                         Row(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(Color(0xFFE3F2FD))
+                                .background(Color(0xFF1E3A5F).copy(alpha = 0.5f))
                                 .clickable(onClick = onReviewExpiry)
-                                .padding(horizontal = 8.dp, vertical = 3.dp),
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = null, tint = Color(0xFF1976D2), modifier = Modifier.size(14.dp))
+                            Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = null, tint = Color(0xFF60A5FA), modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "Need date review",
-                                color = Color(0xFF1976D2),
+                                color = Color(0xFF60A5FA),
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 11.sp
                             )
@@ -793,16 +803,16 @@ fun InventoryProductCard(
                         Row(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .background(BrandSurfaceSoft)
                                 .clickable(onClick = onReviewExpiry)
-                                .padding(horizontal = 8.dp, vertical = 3.dp),
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.EventAvailable, contentDescription = null, tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(13.dp))
+                            Icon(Icons.Default.EventAvailable, contentDescription = null, tint = TextMuted, modifier = Modifier.size(13.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "Exp: ${formatExpiryDate(expiry)}",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = TextSecondary,
                                 fontSize = 11.sp
                             )
                         }
@@ -811,16 +821,16 @@ fun InventoryProductCard(
 
                 TextButton(
                     onClick = onReviewExpiry,
-                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
-                    modifier = Modifier.height(28.dp)
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                    modifier = Modifier.height(32.dp)
                 ) {
-                    Icon(Icons.Default.EditCalendar, contentDescription = null, modifier = Modifier.size(13.dp), tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text("Date", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.Default.EditCalendar, contentDescription = null, modifier = Modifier.size(14.dp), tint = EmeraldInteractive)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Date", fontSize = 11.sp, color = EmeraldInteractive, fontWeight = FontWeight.SemiBold)
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Pricing & Margins
             val profitMargin = if (product.sellingPrice > 0) {
@@ -834,26 +844,27 @@ fun InventoryProductCard(
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Column {
-                        Text("Selling Price", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                        Text("Selling Price", style = MaterialTheme.typography.labelSmall, color = TextMuted)
                         Text(
                             "₱${String.format(Locale.US, "%.2f", product.sellingPrice)}",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = EmeraldPrimary
+                            color = EmeraldInteractive
                         )
                     }
 
                     Column {
-                        Text("Cost Price", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                        Text("Cost Price", style = MaterialTheme.typography.labelSmall, color = TextMuted)
                         Text(
                             "₱${String.format(Locale.US, "%.2f", product.costPrice)}",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextPrimary
                         )
                     }
 
                     Column {
-                        Text("Margin", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                        Text("Margin", style = MaterialTheme.typography.labelSmall, color = TextMuted)
                         Text(
                             "${String.format(Locale.US, "%.0f", profitMargin)}%",
                             style = MaterialTheme.typography.titleSmall,
@@ -868,20 +879,23 @@ fun InventoryProductCard(
                     OutlinedButton(
                         onClick = onRestock,
                         modifier = Modifier
-                            .height(36.dp)
+                            .height(38.dp)
                             .testTag("restock_btn_${product.id}"),
-                        contentPadding = PaddingValues(horizontal = 10.dp)
+                        contentPadding = PaddingValues(horizontal = 10.dp),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Stock", fontSize = 12.sp)
+                        Text("Stock", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
 
-                    IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    IconButton(onClick = onEdit, modifier = Modifier.size(40.dp)) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(18.dp), tint = TextSecondary)
                     }
 
-                    IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                    IconButton(onClick = onDelete, modifier = Modifier.size(40.dp)) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete", tint = OutOfStockRed, modifier = Modifier.size(18.dp))
                     }
                 }

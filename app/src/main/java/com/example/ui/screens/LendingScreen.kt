@@ -64,10 +64,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.CustomerDebt
+import com.example.ui.components.TindaCard
+import com.example.ui.theme.BorderElevated
+import com.example.ui.theme.BorderSubtle
+import com.example.ui.theme.BrandSurfaceElevated
+import com.example.ui.theme.BrandSurfaceSoft
 import com.example.ui.theme.CashGreen
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.InStockGreen
 import com.example.ui.theme.OutOfStockRed
+import com.example.ui.theme.TextMuted
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.UtangAmber
 import com.example.viewmodel.TindaViewModel
 import java.text.SimpleDateFormat
@@ -101,12 +109,12 @@ fun LendingScreen(
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header Collectibles Card
-            Card(
+            TindaCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = UtangAmber.copy(alpha = 0.12f))
+                backgroundColor = BrandSurfaceElevated,
+                borderColor = UtangAmber.copy(alpha = 0.4f)
             ) {
                 Row(
                     modifier = Modifier
@@ -132,7 +140,7 @@ fun LendingScreen(
                         Text(
                             text = "$activeDebtorsCount active customer${if (activeDebtorsCount != 1) "s" else ""} with balance",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = TextSecondary
                         )
                     }
 
@@ -653,13 +661,13 @@ fun DebtorCard(
     customer: CustomerDebt,
     onClick: () -> Unit
 ) {
-    ElevatedCard(
+    TindaCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
             .testTag("debtor_card_${customer.id}"),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        backgroundColor = BrandSurfaceElevated,
+        borderColor = if (customer.totalDebt > 0) UtangAmber.copy(alpha = 0.35f) else BorderElevated
     ) {
         Row(
             modifier = Modifier
@@ -673,21 +681,24 @@ fun DebtorCard(
                     text = customer.name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 if (customer.phone.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = customer.phone,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline
+                        color = TextSecondary
                     )
                 }
                 if (customer.addressOrNote.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = customer.addressOrNote,
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray,
+                        color = TextMuted,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -702,6 +713,8 @@ fun DebtorCard(
                     color = if (customer.totalDebt > 0) UtangAmber else InStockGreen
                 )
 
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
@@ -709,7 +722,7 @@ fun DebtorCard(
                             if (customer.totalDebt > 0) UtangAmber.copy(alpha = 0.15f)
                             else InStockGreen.copy(alpha = 0.15f)
                         )
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = if (customer.totalDebt > 0) "Unpaid" else "Settled",

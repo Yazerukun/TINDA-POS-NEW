@@ -71,11 +71,20 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.SaleTransaction
 import com.example.data.ZReadReport
+import com.example.ui.components.TindaCard
+import com.example.ui.theme.BorderElevated
+import com.example.ui.theme.BorderSubtle
+import com.example.ui.theme.BrandSurfaceElevated
+import com.example.ui.theme.BrandSurfaceSoft
 import com.example.ui.theme.CashGreen
+import com.example.ui.theme.EmeraldInteractive
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.GCashBlue
 import com.example.ui.theme.InStockGreen
 import com.example.ui.theme.OutOfStockRed
+import com.example.ui.theme.TextMuted
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.UtangAmber
 import com.example.viewmodel.HourlySalesBucket
 import com.example.viewmodel.ReportPeriod
@@ -129,12 +138,10 @@ fun ReportsScreen(
     ) {
         // Real-time Database Status Header
         item {
-            ElevatedCard(
+            TindaCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                backgroundColor = BrandSurfaceElevated,
+                borderColor = BorderElevated
             ) {
                 Row(
                     modifier = Modifier
@@ -367,10 +374,10 @@ fun ReportsScreen(
 
         // Cash Drawer & Utang Financial Reconciliation Card
         item {
-            ElevatedCard(
+            TindaCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+                backgroundColor = BrandSurfaceElevated,
+                borderColor = BorderElevated
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
@@ -869,13 +876,13 @@ fun ReportsScreen(
                     else -> UtangAmber
                 }
 
-                ElevatedCard(
+                TindaCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { selectedSaleForReceipt = sale }
                         .testTag("sale_item_${sale.id}"),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    backgroundColor = BrandSurfaceElevated,
+                    borderColor = BorderElevated
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(
@@ -1212,10 +1219,10 @@ fun ReportMetricCard(
     accentColor: Color,
     modifier: Modifier = Modifier
 ) {
-    ElevatedCard(
+    TindaCard(
         modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        backgroundColor = BrandSurfaceElevated,
+        borderColor = BorderElevated
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -1226,7 +1233,7 @@ fun ReportMetricCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
+                    color = TextMuted,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -1237,12 +1244,12 @@ fun ReportMetricCard(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
-                            .background(accentColor.copy(alpha = 0.12f))
-                            .padding(horizontal = 5.dp, vertical = 1.dp)
+                            .background(accentColor.copy(alpha = 0.15f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = badge,
-                            fontSize = 9.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = accentColor,
                             maxLines = 1
@@ -1263,7 +1270,7 @@ fun ReportMetricCard(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = TextSecondary,
                 fontSize = 11.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
