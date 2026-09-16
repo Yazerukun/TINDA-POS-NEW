@@ -1,11 +1,20 @@
-name: Build Android APK
+name: Build & Release Android APK
 
 on:
   push:
     branches: [ "main", "master" ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "main", "master" ]
   workflow_dispatch:
+    inputs:
+      version_tag:
+        description: "Release tag (e.g. v1.0.0)"
+        required: false
+        default: "v1.0.0"
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -15,6 +24,8 @@ jobs:
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -35,10 +46,64 @@ jobs:
         run: |
           gradle assembleDebug --stacktrace
 
-      - name: Upload APK Artifact
+      - name: Prepare Polished APK Artifacts
+        id: prepare_apk
+        run: |
+          # Determine version name
+          VERSION="${{ github.event.inputs.version_tag }}"
+          if [ -z "$VERSION" ]; then
+            if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+              VERSION="${{ github.ref_name }}"
+            else
+              VERSION="v1.0.0"
+            fi
+          fi
+
+          echo "App Version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Prepare clean, professionally named APK files
+          mkdir -p release-output
+          cp app/build/outputs/apk/debug/app-debug.apk "release-output/Tinda-POS-${VERSION}.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "release-output/Tinda-POS-Latest.apk"
+          ls -la release-output/
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TindaPOS-Debug-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: Tinda-POS-APK
+          path: release-output/*
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish to GitHub Releases
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.prepare_apk.outputs.version }}
+          name: "Tinda POS ${{ steps.prepare_apk.outputs.version }} - Retail & Sari-Sari Store POS"
+          body: |
+            ## 📱 Tinda POS - Official Android Release
+
+            Modern, offline-first Point of Sale & Inventory Management System for Android.
+
+            ### ✨ Included Features:
+            - 🛒 **Fast POS Checkout**: Real-time product search, barcode scanner integration, and fast-cash change calculation.
+            - 💳 **Multi-Payment Modes**: Cash, GCash/Maya QR, and Customer Credit ("Utang") ledger.
+            - 📦 **Inventory Management**: Real-time stock levels, low-stock warnings, expiry date monitoring, and batch management.
+            - 📊 **Cash Drawer & Financial Reports**: Daily sales summaries, net profit, reconciliation float tracker, and CSV exports.
+            - 📱 **Adaptive Layout**: Optimized for both handheld phones and dual-pane tablet POS terminals.
+            - 💾 **100% Offline-First**: Local SQLite/Room database with zero cloud subscription required.
+
+            ### 📥 Download & Installation:
+            1. Download the attached **`Tinda-POS-${{ steps.prepare_apk.outputs.version }}.apk`** below.
+            2. Open the file on your Android device (Android 7.0+ recommended).
+            3. If prompted, allow "Install from unknown sources" for your browser or file manager.
+            4. Launch **Tinda POS** and start ringing sales immediately!
+          draft: false
+          prerelease: false
+          files: |
+            release-output/Tinda-POS-${{ steps.prepare_apk.outputs.version }}.apk
+            release-output/Tinda-POS-Latest.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
