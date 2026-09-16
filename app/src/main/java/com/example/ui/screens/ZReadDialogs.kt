@@ -6,11 +6,13 @@ import android.print.PrintAttributes
 import android.print.PrintManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -68,11 +70,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.ZReadReport
+import com.example.ui.theme.BorderElevated
+import com.example.ui.theme.BrandSurfaceElevated
 import com.example.ui.theme.CashGreen
+import com.example.ui.theme.EmeraldInteractive
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.GCashBlue
 import com.example.ui.theme.InStockGreen
 import com.example.ui.theme.OutOfStockRed
+import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.UtangAmber
 import com.example.ui.theme.WarningAmber
 import com.example.viewmodel.StoreProfile
@@ -188,13 +194,14 @@ fun XReadDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Thermal Slip Paper Simulation
+                // Thermal Slip Paper Simulation (High-Definition, Crisp Contrast)
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(10.dp)),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFCFCFC)),
-                    shape = RoundedCornerShape(10.dp)
+                        .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp)),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -205,49 +212,42 @@ fun XReadDialog(
                         Text(
                             text = storeProfile.storeName,
                             fontWeight = FontWeight.Black,
-                            fontSize = 15.sp,
+                            fontSize = 17.sp,
                             textAlign = TextAlign.Center,
-                            fontFamily = FontFamily.Monospace,
+                            color = Color(0xFF0F172A),
                             modifier = Modifier.fillMaxWidth()
                         )
                         if (storeProfile.storeAddress.isNotBlank()) {
                             Text(
                                 text = storeProfile.storeAddress,
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 textAlign = TextAlign.Center,
-                                fontFamily = FontFamily.Monospace,
-                                color = Color.Gray,
+                                color = Color(0xFF334155),
+                                fontWeight = FontWeight.Medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = "*** X-READ AUDIT REPORT ***",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 13.sp,
                             textAlign = TextAlign.Center,
-                            fontFamily = FontFamily.Monospace,
                             color = EmeraldPrimary,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Text(
                             text = "Shift Since: ${timeFmt.format(Date(snapshot.periodStart))}",
-                            fontSize = 10.sp,
+                            fontSize = 11.5.sp,
                             textAlign = TextAlign.Center,
-                            fontFamily = FontFamily.Monospace,
-                            color = Color.DarkGray,
+                            color = Color(0xFF475569),
+                            fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.fillMaxWidth()
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = "- - - - - - - - - - - - - - - - - - - - - - -",
-                            textAlign = TextAlign.Center,
-                            fontFamily = FontFamily.Monospace,
-                            color = Color.LightGray,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
+                        HorizontalDivider(color = Color(0xFF0F172A), thickness = 1.5.dp)
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         ThermalReportRow("Gross Sales", "₱${String.format(Locale.US, "%.2f", snapshot.grossSales)}", isBold = true)
                         ThermalReportRow("Less Discounts", "-₱${String.format(Locale.US, "%.2f", snapshot.totalDiscounts)}")
@@ -345,11 +345,20 @@ fun XReadDialog(
                                 printHtml = generateHtmlSlip("X-READ AUDIT REPORT", receiptPlainText, storeProfile)
                             )
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, BorderElevated),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = BrandSurfaceElevated,
+                            contentColor = TextPrimary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                     ) {
-                        Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldInteractive)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Print Slip", fontSize = 12.sp)
+                        Text("Print Slip", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
 
                     OutlinedButton(
@@ -361,19 +370,32 @@ fun XReadDialog(
                             }
                             context.startActivity(Intent.createChooser(sendIntent, "Share X-Read Report"))
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, BorderElevated),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = BrandSurfaceElevated,
+                            contentColor = TextPrimary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                     ) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldInteractive)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Share", fontSize = 12.sp)
+                        Text("Share", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
 
                     Button(
                         onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                        modifier = Modifier.weight(1f)
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                     ) {
-                        Text("Close", fontSize = 12.sp)
+                        Text("Close", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -694,13 +716,14 @@ fun ZReadDetailDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Slip presentation
+                // Slip presentation (High-Definition, Crisp Contrast)
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(10.dp)),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFCFCFC)),
-                    shape = RoundedCornerShape(10.dp)
+                        .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp)),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -710,39 +733,32 @@ fun ZReadDetailDialog(
                         Text(
                             text = storeProfile.storeName,
                             fontWeight = FontWeight.Black,
-                            fontSize = 15.sp,
+                            fontSize = 17.sp,
                             textAlign = TextAlign.Center,
-                            fontFamily = FontFamily.Monospace,
+                            color = Color(0xFF0F172A),
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "*** OFFICIAL Z-READ REPORT ***",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 13.sp,
                             textAlign = TextAlign.Center,
-                            fontFamily = FontFamily.Monospace,
                             color = OutOfStockRed,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Text(
                             text = "Report No: ${report.zReadNumber}",
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             textAlign = TextAlign.Center,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF334155),
                             modifier = Modifier.fillMaxWidth()
                         )
 
+                        Spacer(modifier = Modifier.height(10.dp))
+                        HorizontalDivider(color = Color(0xFF0F172A), thickness = 1.5.dp)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "- - - - - - - - - - - - - - - - - - - - - - -",
-                            textAlign = TextAlign.Center,
-                            fontFamily = FontFamily.Monospace,
-                            color = Color.LightGray,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
 
                         ThermalReportRow("Period Start", timeFmt.format(Date(report.periodStart)))
                         ThermalReportRow("Period End", timeFmt.format(Date(report.periodEnd)))
@@ -813,11 +829,20 @@ fun ZReadDetailDialog(
                                 printHtml = generateHtmlSlip("OFFICIAL Z-READ REPORT", receiptPlainText, storeProfile)
                             )
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, BorderElevated),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = BrandSurfaceElevated,
+                            contentColor = TextPrimary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                     ) {
-                        Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldInteractive)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Print", fontSize = 12.sp)
+                        Text("Print", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
 
                     OutlinedButton(
@@ -829,19 +854,32 @@ fun ZReadDetailDialog(
                             }
                             context.startActivity(Intent.createChooser(sendIntent, "Share Z-Read Report"))
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, BorderElevated),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = BrandSurfaceElevated,
+                            contentColor = TextPrimary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                     ) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldInteractive)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Share", fontSize = 12.sp)
+                        Text("Share", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
 
                     Button(
                         onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                        modifier = Modifier.weight(1f)
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                     ) {
-                        Text("Done", fontSize = 12.sp)
+                        Text("Done", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -1024,20 +1062,31 @@ fun ZReadHistoryDialog(
                                 val csvFile = com.example.util.CsvExportHelper.exportZReadReportsToCsv(context, zReports)
                                 com.example.util.CsvExportHelper.shareFile(context, csvFile, "text/csv", "Export Z-Read History")
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, BorderElevated),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = BrandSurfaceElevated,
+                                contentColor = TextPrimary
+                            )
                         ) {
-                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldInteractive)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Export CSV")
+                            Text("Export CSV", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
 
                     Button(
                         onClick = onDismiss,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
                     ) {
-                        Text("Close")
+                        Text("Close", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -1055,16 +1104,15 @@ fun ThermalReportRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = 3.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
-            fontSize = 11.sp,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-            color = if (color != Color.Unspecified) color else Color.DarkGray,
+            fontSize = 12.5.sp,
+            fontWeight = if (isBold) FontWeight.ExtraBold else FontWeight.SemiBold,
+            color = if (color != Color.Unspecified) color else Color(0xFF334155),
             modifier = Modifier.weight(1f, fill = false),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -1072,10 +1120,9 @@ fun ThermalReportRow(
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = value,
-            fontSize = 11.sp,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-            color = if (color != Color.Unspecified) color else Color.Black,
+            fontSize = 13.sp,
+            fontWeight = if (isBold) FontWeight.Black else FontWeight.Bold,
+            color = if (color != Color.Unspecified) color else Color(0xFF0F172A),
             maxLines = 1
         )
     }
@@ -1090,19 +1137,30 @@ private fun generateHtmlSlip(title: String, plainText: String, storeProfile: Sto
         <html>
         <head>
             <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <style>
+                * {
+                    box-sizing: border-box;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
                 body {
-                    font-family: 'Courier New', Courier, monospace;
-                    font-size: 12px;
-                    line-height: 1.35;
-                    width: 280px;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, monospace, sans-serif;
+                    font-size: 13px;
+                    font-weight: 600;
+                    line-height: 1.4;
+                    width: 320px;
                     margin: 0 auto;
-                    padding: 10px;
-                    color: #000;
+                    padding: 10px 6px;
+                    color: #000000 !important;
+                    background: #ffffff;
+                    -webkit-font-smoothing: antialiased;
+                    text-rendering: optimizeLegibility;
                 }
                 .slip {
                     white-space: pre-wrap;
                     word-wrap: break-word;
+                    font-weight: 600;
                 }
             </style>
         </head>

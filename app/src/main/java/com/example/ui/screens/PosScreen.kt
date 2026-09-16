@@ -11,6 +11,7 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -785,8 +786,8 @@ fun ProductGridCard(
                     onClick = onAddToCart,
                     enabled = !isOutOfStock,
                     modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(10.dp))
                         .background(
                             if (!isOutOfStock) EmeraldPrimary
                             else BrandSurfaceSoft
@@ -917,10 +918,10 @@ fun CheckoutSheetContent(
                         IconButton(
                             onClick = { onUpdateQty(item.product.id, item.quantity - 1) },
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(8.dp))
                                 .background(BrandSurfaceElevated)
-                                .border(1.dp, BorderSubtle, CircleShape)
+                                .border(1.dp, BorderSubtle, RoundedCornerShape(8.dp))
                         ) {
                             Icon(
                                 imageVector = if (item.quantity == 1) Icons.Default.Delete else Icons.Default.Remove,
@@ -946,10 +947,10 @@ fun CheckoutSheetContent(
                             },
                             enabled = item.quantity < item.product.stockQuantity,
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(8.dp))
                                 .background(BrandSurfaceElevated)
-                                .border(1.dp, BorderSubtle, CircleShape)
+                                .border(1.dp, BorderSubtle, RoundedCornerShape(8.dp))
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
@@ -1532,27 +1533,29 @@ fun generateReceiptHtml(
         items.joinToString("") { item ->
             """
             <tr>
-                <td style="padding: 3px 0; font-weight: bold; text-align: left;">${item.name}</td>
-                <td style="padding: 3px 0; text-align: center;">${item.quantity}</td>
-                <td style="padding: 3px 0; text-align: right;">₱${String.format(Locale.US, "%.2f", item.unitPrice)}</td>
-                <td style="padding: 3px 0; text-align: right; font-weight: bold;">₱${String.format(Locale.US, "%.2f", item.subtotal)}</td>
+                <td colspan="3" class="item-title">${item.name}</td>
+            </tr>
+            <tr class="item-detail-row">
+                <td class="item-qty-price">${item.quantity} &times; ₱${String.format(Locale.US, "%.2f", item.unitPrice)}</td>
+                <td class="item-space"></td>
+                <td class="item-subtotal">₱${String.format(Locale.US, "%.2f", item.subtotal)}</td>
             </tr>
             """.trimIndent()
         }
     } else {
         """
         <tr>
-            <td colspan="4" style="padding: 4px 0;">${sale.itemsSummary}</td>
+            <td colspan="3" style="padding: 6px 0; font-size: 13px; font-weight: 600; color: #000;">${sale.itemsSummary}</td>
         </tr>
         """.trimIndent()
     }
 
     val customerRow = if (!sale.customerName.isNullOrBlank()) {
-        """<div class="row"><span>Customer:</span><span style="font-weight: bold;">${sale.customerName}</span></div>"""
+        """<div class="row"><span class="lbl">Customer:</span><span class="val" style="font-weight: 800;">${sale.customerName}</span></div>"""
     } else ""
 
     val discountRow = if (sale.discountAmount > 0) {
-        """<div class="row"><span>Discount (${sale.discountType}):</span><span>-₱${String.format(Locale.US, "%.2f", sale.discountAmount)}</span></div>"""
+        """<div class="row discount-row"><span class="lbl">Discount (${sale.discountType}):</span><span class="val">-₱${String.format(Locale.US, "%.2f", sale.discountAmount)}</span></div>"""
     } else ""
 
     return """
@@ -1560,82 +1563,170 @@ fun generateReceiptHtml(
     <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Receipt ${sale.receiptNumber}</title>
         <style>
             @page {
                 size: 80mm auto;
-                margin: 4mm;
+                margin: 3mm 4mm;
+            }
+            * {
+                box-sizing: border-box;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             body {
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 11px;
-                color: #000;
-                margin: 0;
-                padding: 4px;
-                line-height: 1.3;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                font-size: 13px;
+                line-height: 1.4;
+                color: #000000 !important;
+                background-color: #ffffff;
+                margin: 0 auto;
+                padding: 6px 4px;
+                max-width: 320px;
+                -webkit-font-smoothing: antialiased;
+                text-rendering: optimizeLegibility;
             }
             .header {
                 text-align: center;
-                margin-bottom: 6px;
+                margin-bottom: 8px;
             }
             .store-name {
-                font-size: 16px;
-                font-weight: bold;
+                font-size: 18px;
+                font-weight: 900;
+                letter-spacing: 0.5px;
                 text-transform: uppercase;
-                margin-bottom: 2px;
+                margin-bottom: 3px;
+                color: #000000;
             }
             .sub-text {
-                font-size: 10px;
-                color: #333;
+                font-size: 12px;
+                font-weight: 600;
+                color: #111111;
+                margin-bottom: 2px;
             }
-            .divider {
-                border-top: 1px dashed #000;
-                margin: 6px 0;
+            .divider-solid {
+                border-top: 2px solid #000000;
+                margin: 8px 0;
             }
-            .double-divider {
-                border-top: 2px solid #000;
-                margin: 6px 0;
+            .divider-dashed {
+                border-top: 1.5px dashed #000000;
+                margin: 8px 0;
             }
             .row {
                 display: flex;
                 justify-content: space-between;
-                margin: 2px 0;
+                align-items: center;
+                margin: 3px 0;
+                font-size: 12.5px;
+                color: #000000;
+            }
+            .lbl {
+                font-weight: 600;
+                color: #222222;
+            }
+            .val {
+                font-weight: 700;
+                color: #000000;
             }
             table {
                 width: 100%;
                 border-collapse: collapse;
-                margin: 4px 0;
+                margin: 6px 0;
             }
             th {
-                border-bottom: 1px dashed #000;
+                border-bottom: 2px solid #000000;
                 padding: 4px 0;
-                font-size: 10px;
+                font-size: 12px;
+                font-weight: 900;
+                color: #000000;
+                letter-spacing: 0.5px;
             }
-            .total-row {
+            .item-title {
+                padding-top: 5px;
+                padding-bottom: 2px;
+                font-size: 13.5px;
+                font-weight: 800;
+                color: #000000;
+            }
+            .item-detail-row td {
+                padding-bottom: 5px;
+            }
+            .item-qty-price {
+                font-size: 12.5px;
+                font-weight: 600;
+                color: #222222;
+                padding-left: 8px;
+                text-align: left;
+            }
+            .item-space {
+                width: 10px;
+            }
+            .item-subtotal {
+                font-size: 13.5px;
+                font-weight: 800;
+                color: #000000;
+                text-align: right;
+            }
+            .total-banner {
+                margin: 8px 0;
+                border-top: 2.5px solid #000000;
+                border-bottom: 2.5px solid #000000;
+                padding: 7px 0;
                 display: flex;
                 justify-content: space-between;
-                font-size: 14px;
-                font-weight: bold;
+                align-items: center;
+            }
+            .total-label {
+                font-size: 15px;
+                font-weight: 900;
+                color: #000000;
+                letter-spacing: 0.5px;
+            }
+            .total-val {
+                font-size: 19px;
+                font-weight: 900;
+                color: #000000;
+            }
+            .payment-row {
+                font-size: 13px;
+                margin: 3px 0;
+            }
+            .change-row {
+                font-size: 14.5px;
+                font-weight: 900;
                 margin: 4px 0;
-                border-top: 1px dashed #000;
-                border-bottom: 1px dashed #000;
-                padding: 4px 0;
+                color: #000000;
+            }
+            .discount-row {
+                color: #000000;
+                font-weight: 700;
+            }
+            .barcode-box {
+                text-align: center;
+                margin: 12px 0 6px 0;
+            }
+            .barcode-lines {
+                letter-spacing: 4px;
+                font-family: monospace;
+                font-weight: 900;
+                font-size: 17px;
+                color: #000000;
+            }
+            .barcode-text {
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 1px;
+                color: #000000;
+                margin-top: 2px;
             }
             .footer {
                 text-align: center;
                 margin-top: 10px;
-                font-size: 10px;
+                font-size: 12px;
+                font-weight: 600;
+                color: #222222;
                 font-style: italic;
-            }
-            .barcode-box {
-                text-align: center;
-                margin: 8px 0;
-            }
-            .barcode-lines {
-                letter-spacing: 3px;
-                font-family: monospace;
-                font-weight: bold;
-                font-size: 14px;
             }
         </style>
     </head>
@@ -1645,17 +1736,16 @@ fun generateReceiptHtml(
             ${if (storeAddress.isNotBlank()) "<div class=\"sub-text\">$storeAddress</div>" else ""}
             ${if (storePhone.isNotBlank()) "<div class=\"sub-text\">Tel: $storePhone</div>" else ""}
         </div>
-        <div class="double-divider"></div>
-        <div class="row"><span>Receipt #:</span><span style="font-weight: bold;">${sale.receiptNumber}</span></div>
-        <div class="row"><span>Date:</span><span>$dateStr</span></div>
+        <div class="divider-solid"></div>
+        <div class="row"><span class="lbl">Receipt #:</span><span class="val" style="font-size: 13.5px; font-weight: 900;">${sale.receiptNumber}</span></div>
+        <div class="row"><span class="lbl">Date:</span><span class="val">$dateStr</span></div>
         $customerRow
-        <div class="divider"></div>
+        <div class="divider-dashed"></div>
         <table>
             <thead>
                 <tr>
-                    <th style="text-align: left;">ITEM</th>
-                    <th style="text-align: center;">QTY</th>
-                    <th style="text-align: right;">PRICE</th>
+                    <th style="text-align: left;">ITEM PARTICULARS</th>
+                    <th></th>
                     <th style="text-align: right;">TOTAL</th>
                 </tr>
             </thead>
@@ -1663,23 +1753,23 @@ fun generateReceiptHtml(
                 $itemsRowsHtml
             </tbody>
         </table>
-        <div class="divider"></div>
-        <div class="row"><span>Subtotal:</span><span>₱${String.format(Locale.US, "%.2f", sale.totalAmount)}</span></div>
+        <div class="divider-dashed"></div>
+        <div class="row"><span class="lbl">Subtotal:</span><span class="val">₱${String.format(Locale.US, "%.2f", sale.totalAmount)}</span></div>
         $discountRow
-        <div class="total-row">
-            <span>TOTAL AMOUNT:</span>
-            <span>₱${String.format(Locale.US, "%.2f", sale.finalAmount)}</span>
+        <div class="total-banner">
+            <span class="total-label">TOTAL AMOUNT:</span>
+            <span class="total-val">₱${String.format(Locale.US, "%.2f", sale.finalAmount)}</span>
         </div>
-        <div class="row"><span>Payment (${sale.paymentMethod}):</span><span>₱${String.format(Locale.US, "%.2f", sale.amountPaid)}</span></div>
-        <div class="row"><span style="font-weight: bold;">Change:</span><span style="font-weight: bold;">₱${String.format(Locale.US, "%.2f", sale.changeAmount)}</span></div>
-        <div class="divider"></div>
+        <div class="row payment-row"><span class="lbl">Payment (${sale.paymentMethod}):</span><span class="val">₱${String.format(Locale.US, "%.2f", sale.amountPaid)}</span></div>
+        <div class="row change-row"><span class="lbl" style="font-weight: 900; color: #000000;">Change Due:</span><span class="val" style="font-size: 15.5px; font-weight: 900;">₱${String.format(Locale.US, "%.2f", sale.changeAmount)}</span></div>
+        <div class="divider-dashed"></div>
         <div class="barcode-box">
             <div class="barcode-lines">||||| | |||| ||||| || ||||||</div>
-            <div style="font-size: 10px;">${sale.receiptNumber}</div>
+            <div class="barcode-text">${sale.receiptNumber}</div>
         </div>
         <div class="footer">
             <div>$receiptMessage</div>
-            <div style="margin-top: 4px; font-size: 9px; color: #555;">Powered by Tinda POS</div>
+            <div style="margin-top: 4px; font-size: 10.5px; font-weight: 700; color: #444;">Tinda POS - Official Sale Slip</div>
         </div>
     </body>
     </html>
@@ -1849,25 +1939,37 @@ fun DigitalReceiptDialog(
                         },
                         modifier = Modifier
                             .weight(1.3f)
+                            .height(44.dp)
                             .testTag("receipt_print_btn"),
-                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = EmeraldPrimary,
+                            contentColor = Color.White
+                        ),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
                     ) {
-                        Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Print / PDF", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Print / PDF", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
 
                     OutlinedButton(
                         onClick = { onShare(receiptPlainText) },
                         modifier = Modifier
                             .weight(1f)
+                            .height(44.dp)
                             .testTag("receipt_share_btn"),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, BorderElevated),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = BrandSurfaceElevated,
+                            contentColor = TextPrimary
+                        ),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                     ) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldInteractive)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Share", fontSize = 12.sp)
+                        Text("Share", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
                     }
 
                     OutlinedButton(
@@ -1879,125 +1981,121 @@ fun DigitalReceiptDialog(
                         },
                         modifier = Modifier
                             .weight(1f)
+                            .height(44.dp)
                             .testTag("receipt_copy_btn"),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, BorderElevated),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = BrandSurfaceElevated,
+                            contentColor = TextPrimary
+                        ),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                     ) {
-                        Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldInteractive)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Copy", fontSize = 12.sp)
+                        Text("Copy", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
                     }
                 }
 
-                // Printable Thermal Receipt Canvas
+                // Printable Thermal Receipt Canvas (High-Definition, Crisp Contrast)
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFDE7)),
-                    shape = RoundedCornerShape(10.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(14.dp),
+                            .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         // Perforated Top Guide
                         Text(
-                            text = "• • • • • • • • • • • • • • • • • • • • • • •",
-                            color = Color(0xFFBDBDBD),
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp
+                            text = "- - - - - - - - - - - - - - - - - - - - - - - - - - - -",
+                            color = Color(0xFF94A3B8),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
                         )
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         // Store Header
                         Text(
                             text = storeName,
                             fontWeight = FontWeight.Black,
-                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 18.sp,
+                            color = Color(0xFF0F172A),
                             textAlign = TextAlign.Center
                         )
                         if (storeAddress.isNotBlank()) {
                             Text(
                                 text = storeAddress,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.DarkGray,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF334155),
                                 textAlign = TextAlign.Center
                             )
                         }
                         if (storePhone.isNotBlank()) {
                             Text(
                                 text = "Tel: $storePhone",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.DarkGray,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF334155),
                                 textAlign = TextAlign.Center
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "================================",
-                            color = Color.DarkGray,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
+                        HorizontalDivider(color = Color(0xFF0F172A), thickness = 2.dp)
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         // Transaction Metadata
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Receipt #:", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace)
-                            Text(sale.receiptNumber, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                            Text("Receipt #:", fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
+                            Text(sale.receiptNumber, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF0F172A))
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Date & Time:", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace)
-                            Text(dateStr, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace)
+                            Text("Date & Time:", fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
+                            Text(dateStr, fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
                         }
                         if (!sale.customerName.isNullOrBlank()) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Customer:", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace)
-                                Text(sale.customerName, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                                Text("Customer:", fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF475569))
+                                Text(sale.customerName, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF0F172A))
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "--------------------------------",
-                            color = Color.DarkGray,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp
-                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider(color = Color(0xFF0F172A), thickness = 1.dp)
+                        Spacer(modifier = Modifier.height(4.dp))
 
                         // Itemized Table Header
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 2.dp),
+                                .padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("ITEM", modifier = Modifier.weight(2f), fontWeight = FontWeight.Bold, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
-                            Text("QTY", modifier = Modifier.weight(0.7f), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
-                            Text("PRICE", modifier = Modifier.weight(1.1f), textAlign = TextAlign.Right, fontWeight = FontWeight.Bold, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
-                            Text("TOTAL", modifier = Modifier.weight(1.2f), textAlign = TextAlign.Right, fontWeight = FontWeight.Bold, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+                            Text("ITEM PARTICULARS", fontWeight = FontWeight.Black, fontSize = 12.sp, color = Color(0xFF0F172A))
+                            Text("TOTAL", fontWeight = FontWeight.Black, fontSize = 12.sp, color = Color(0xFF0F172A))
                         }
 
-                        Text(
-                            text = "--------------------------------",
-                            color = Color.DarkGray,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp
-                        )
+                        HorizontalDivider(color = Color(0xFF0F172A), thickness = 1.dp)
+                        Spacer(modifier = Modifier.height(4.dp))
 
                         // Itemized List
                         if (items.isNotEmpty()) {
@@ -2005,29 +2103,29 @@ fun DigitalReceiptDialog(
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 2.dp)
+                                        .padding(vertical = 3.dp)
                                 ) {
                                     Text(
                                         text = item.name,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 12.sp,
-                                        fontFamily = FontFamily.Monospace
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.5.sp,
+                                        color = Color(0xFF0F172A)
                                     )
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            text = "    ${item.quantity} x ₱${String.format(Locale.US, "%.2f", item.unitPrice)}",
-                                            fontSize = 11.sp,
-                                            color = Color(0xFF424242),
-                                            fontFamily = FontFamily.Monospace
+                                            text = "   ${item.quantity} × ₱${String.format(Locale.US, "%.2f", item.unitPrice)}",
+                                            fontSize = 12.5.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color(0xFF334155)
                                         )
                                         Text(
                                             text = "₱${String.format(Locale.US, "%.2f", item.subtotal)}",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 11.sp,
-                                            fontFamily = FontFamily.Monospace
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 13.5.sp,
+                                            color = Color(0xFF0F172A)
                                         )
                                     }
                                 }
@@ -2035,8 +2133,9 @@ fun DigitalReceiptDialog(
                         } else {
                             Text(
                                 text = sale.itemsSummary,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontFamily = FontFamily.Monospace,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF0F172A),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp)
@@ -2044,88 +2143,72 @@ fun DigitalReceiptDialog(
                         }
 
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "--------------------------------",
-                            color = Color.DarkGray,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp
-                        )
+                        HorizontalDivider(color = Color(0xFF0F172A), thickness = 1.dp)
+                        Spacer(modifier = Modifier.height(4.dp))
 
                         // Subtotal & Discounts
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Subtotal:", fontSize = 12.sp, fontFamily = FontFamily.Monospace)
-                            Text("₱${String.format(Locale.US, "%.2f", sale.totalAmount)}", fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                            Text("Subtotal:", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color(0xFF475569))
+                            Text("₱${String.format(Locale.US, "%.2f", sale.totalAmount)}", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
                         }
                         if (sale.discountAmount > 0) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Discount (${sale.discountType}):", fontSize = 12.sp, color = LowStockOrange, fontFamily = FontFamily.Monospace)
-                                Text("-₱${String.format(Locale.US, "%.2f", sale.discountAmount)}", fontSize = 12.sp, color = LowStockOrange, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                                Text("Discount (${sale.discountType}):", fontSize = 13.sp, color = LowStockOrange, fontWeight = FontWeight.Bold)
+                                Text("-₱${String.format(Locale.US, "%.2f", sale.discountAmount)}", fontSize = 13.5.sp, color = LowStockOrange, fontWeight = FontWeight.ExtraBold)
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "================================",
-                            color = Color.DarkGray,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp
-                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        HorizontalDivider(color = Color(0xFF0F172A), thickness = 2.dp)
 
-                        // Grand Total
+                        // Grand Total Banner
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                                .padding(vertical = 6.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("TOTAL AMOUNT:", fontWeight = FontWeight.Black, fontSize = 15.sp, fontFamily = FontFamily.Monospace)
+                            Text("TOTAL AMOUNT:", fontWeight = FontWeight.Black, fontSize = 15.sp, color = Color(0xFF0F172A))
                             Text(
                                 text = "₱${String.format(Locale.US, "%.2f", sale.finalAmount)}",
                                 fontWeight = FontWeight.Black,
-                                fontSize = 16.sp,
-                                color = EmeraldPrimary,
-                                fontFamily = FontFamily.Monospace
+                                fontSize = 19.sp,
+                                color = EmeraldPrimary
                             )
                         }
 
-                        Text(
-                            text = "================================",
-                            color = Color.DarkGray,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp
-                        )
+                        HorizontalDivider(color = Color(0xFF0F172A), thickness = 2.dp)
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         // Payment Tender & Change
-                        Spacer(modifier = Modifier.height(4.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Payment (${sale.paymentMethod}):", fontSize = 12.sp, fontFamily = FontFamily.Monospace)
-                            Text("₱${String.format(Locale.US, "%.2f", sale.amountPaid)}", fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                            Text("Payment (${sale.paymentMethod}):", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color(0xFF475569))
+                            Text("₱${String.format(Locale.US, "%.2f", sale.amountPaid)}", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Change Due:", fontWeight = FontWeight.Bold, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
+                            Text("Change Due:", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = Color(0xFF0F172A))
                             Text(
                                 text = "₱${String.format(Locale.US, "%.2f", sale.changeAmount)}",
                                 fontWeight = FontWeight.Black,
-                                fontSize = 14.sp,
-                                color = EmeraldPrimary,
-                                fontFamily = FontFamily.Monospace
+                                fontSize = 16.sp,
+                                color = Color(0xFF059669)
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         // Simulated Barcode
                         Column(
@@ -2134,24 +2217,26 @@ fun DigitalReceiptDialog(
                         ) {
                             Row(
                                 modifier = Modifier
-                                    .fillMaxWidth(0.8f)
-                                    .height(28.dp),
+                                    .fillMaxWidth(0.85f)
+                                    .height(30.dp),
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = "||||| | |||| ||||| || |||||| | |||||",
-                                    fontSize = 14.sp,
-                                    letterSpacing = 2.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    letterSpacing = 2.5.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFF0F172A),
                                     fontFamily = FontFamily.Monospace
                                 )
                             }
                             Text(
                                 text = sale.receiptNumber,
-                                fontSize = 10.sp,
-                                fontFamily = FontFamily.Monospace,
-                                color = Color.DarkGray
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF475569),
+                                fontFamily = FontFamily.Monospace
                             )
                         }
 
@@ -2160,19 +2245,21 @@ fun DigitalReceiptDialog(
                         // Footer Note
                         Text(
                             text = receiptMessage,
-                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                            color = Color(0xFF334155),
                             textAlign = TextAlign.Center
                         )
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         // Perforated Bottom Guide
                         Text(
-                            text = "• • • • • • • • • • • • • • • • • • • • • • •",
-                            color = Color(0xFFBDBDBD),
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp
+                            text = "- - - - - - - - - - - - - - - - - - - - - - - - - - - -",
+                            color = Color(0xFF94A3B8),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -2183,12 +2270,14 @@ fun DigitalReceiptDialog(
                 onClick = onDismiss,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(48.dp)
                     .testTag("receipt_done_btn"),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
             ) {
-                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Done / New Sale", fontWeight = FontWeight.Bold)
+                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Done / New Sale", fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
     )
