@@ -1,0 +1,52 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group>
+        <!-- Cash register base drawer -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M28,68 C28,66 29.5,64.5 31.5,64.5 L76.5,64.5 C78.5,64.5 80,66 80,68 L80,78 C80,80.2 78.2,82 76,82 L32,82 C29.8,82 28,80.2 28,78 Z" />
+        <!-- Cash drawer handle/lock slot -->
+        <path
+            android:fillColor="#004D40"
+            android:pathData="M48,72 L60,72 C60.8,72 61.5,72.7 61.5,73.5 C61.5,74.3 60.8,75 60,75 L48,75 C47.2,75 46.5,74.3 46.5,73.5 C46.5,72.7 47.2,72 48,72 Z" />
+        <!-- Register body/stand -->
+        <path
+            android:fillColor="#E0F2F1"
+            android:pathData="M33,40 C33,37.8 34.8,36 37,36 L71,36 C73.2,36 75,37.8 75,40 L76,64.5 L32,64.5 Z" />
+        <!-- Display screen -->
+        <path
+            android:fillColor="#004D40"
+            android:pathData="M38,40 C38,39 38.8,38.2 39.8,38.2 L68.2,38.2 C69.2,38.2 70,39 70,40 L70,52 C70,53 69.2,53.8 68.2,53.8 L39.8,53.8 C38.8,53.8 38,53 38,52 Z" />
+        <!-- Screen details (Peso currency symbol lines) -->
+        <path
+            android:fillColor="#4DB6AC"
+            android:pathData="M45,43 L53,43 C55,43 56,44 56,45.5 C56,47 55,48 53,48 L45,48 Z M43,45 L57,45 M43,47 L57,47 M47,42 L47,51"
+            android:strokeColor="#80CBC4"
+            android:strokeWidth="1.2" />
+        <path
+            android:fillColor="#80CBC4"
+            android:pathData="M60,43 L65,43 M60,46 L65,46 M60,49 L65,49"
+            android:strokeColor="#80CBC4"
+            android:strokeWidth="1" />
+        <!-- Register keypad / scanner bar -->
+        <path
+            android:fillColor="#00796B"
+            android:pathData="M36,57 L44,57 L44,61 L36,61 Z M47,57 L55,57 L55,61 L47,61 Z M58,57 L72,57 L72,61 L58,61 Z" />
+        <!-- Printed receipt popping out from top -->
+        <path
+            android:fillColor="#FFFDE7"
+            android:pathData="M46,26 L62,26 L62,36 L46,36 Z" />
+        <!-- Receipt serrated top -->
+        <path
+            android:fillColor="#FFFDE7"
+            android:pathData="M46,26 L48,24 L50,26 L52,24 L54,26 L56,24 L58,26 L60,24 L62,26 Z" />
+        <!-- Receipt text lines -->
+        <path
+            android:pathData="M49,29 L59,29 M49,32 L56,32"
+            android:strokeColor="#FFB300"
+            android:strokeWidth="1.2" />
+    </group>
+</vector>

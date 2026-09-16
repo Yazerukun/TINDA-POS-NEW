@@ -1,0 +1,6 @@
+{
+  "name": "Tinda POS",
+  "description": "Offline-ready Point of Sale, Inventory tracking, and Customer Credit ledger management app tailored for retail stores.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
