@@ -11,9 +11,10 @@ import androidx.room.RoomDatabase
         CustomerDebt::class,
         DebtRecord::class,
         SaleTransaction::class,
-        StockMovement::class
+        StockMovement::class,
+        ZReadReport::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -22,6 +23,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun debtRecordDao(): DebtRecordDao
     abstract fun saleDao(): SaleDao
     abstract fun stockMovementDao(): StockMovementDao
+    abstract fun zReadReportDao(): ZReadReportDao
 
     companion object {
         @Volatile

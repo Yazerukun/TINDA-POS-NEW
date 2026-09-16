@@ -34,6 +34,9 @@ import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -41,6 +44,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +70,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.SaleTransaction
+import com.example.data.ZReadReport
 import com.example.ui.theme.CashGreen
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.GCashBlue
@@ -76,6 +81,9 @@ import com.example.viewmodel.HourlySalesBucket
 import com.example.viewmodel.ReportPeriod
 import com.example.viewmodel.TindaViewModel
 import com.example.viewmodel.TopSellingItem
+import com.example.viewmodel.XReadSnapshot
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -91,6 +99,14 @@ fun ReportsScreen(
 
     var selectedSaleForReceipt by remember { mutableStateOf<SaleTransaction?>(null) }
     var saleToVoid by remember { mutableStateOf<SaleTransaction?>(null) }
+
+    val coroutineScope = rememberCoroutineScope()
+    val allZReads by viewModel.allZReads.collectAsStateWithLifecycle()
+
+    var activeXReadSnapshot by remember { mutableStateOf<XReadSnapshot?>(null) }
+    var showZReadPrompt by remember { mutableStateOf<XReadSnapshot?>(null) }
+    var selectedZReadReport by remember { mutableStateOf<ZReadReport?>(null) }
+    var showZReadHistory by remember { mutableStateOf(false) }
 
     // Pulsing live indicator animation
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -139,13 +155,18 @@ fun ReportsScreen(
                                 .alpha(pulseAlpha)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
                                 Text(
                                     text = "REAL-TIME DATABASE",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = InStockGreen
+                                    color = InStockGreen,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Box(
@@ -158,7 +179,8 @@ fun ReportsScreen(
                                         text = "${reportsState.totalSalesRowsInDb} sales in DB",
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = EmeraldPrimary
+                                        color = EmeraldPrimary,
+                                        maxLines = 1
                                     )
                                 }
                             }
@@ -169,10 +191,14 @@ fun ReportsScreen(
                                 text = "Live synced with Room • Last sale: $lastSyncStr",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     OutlinedButton(
                         onClick = { viewModel.addQuickTestSale("CASH") },
@@ -383,31 +409,44 @@ fun ReportsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f, fill = false)) {
                             Text(
                                 text = "Cash on Hand in Drawer (Today)",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = "₱${String.format(Locale.US, "%.2f", reportsState.cashOnHandToday)}",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = CashGreen
+                                color = CashGreen,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
-                        Column(horizontalAlignment = Alignment.End) {
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            modifier = Modifier.weight(1f, fill = false)
+                        ) {
                             Text(
                                 text = "Credit Collections Today",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = "+₱${String.format(Locale.US, "%.2f", reportsState.utangCollectedToday)}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InStockGreen
+                                color = InStockGreen,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -422,14 +461,113 @@ fun ReportsScreen(
                         Text(
                             text = "Total Active Receivables (Credit)",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline
+                            color = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.weight(1f, fill = false),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "₱${String.format(Locale.US, "%.2f", reportsState.totalOutstandingDebt)}",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
-                            color = UtangAmber
+                            color = UtangAmber,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // X-Read & Z-Read Quick Action Bar
+                    Text(
+                        text = "POS Audit & Shift Registers",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    val snapshot = viewModel.generateCurrentXRead()
+                                    activeXReadSnapshot = snapshot
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("btn_x_read"),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Assessment,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = EmeraldPrimary
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Column {
+                                Text("X-Reading", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = EmeraldPrimary)
+                                Text("Mid-Day Audit", fontSize = 9.sp, color = MaterialTheme.colorScheme.outline)
+                            }
+                        }
+
+                        Button(
+                            onClick = {
+                                coroutineScope.launch {
+                                    val snapshot = viewModel.generateCurrentXRead()
+                                    showZReadPrompt = snapshot
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("btn_z_read"),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = OutOfStockRed),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Lock,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Column {
+                                Text("Z-Reading", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
+                                Text("End of Day", fontSize = 9.sp, color = Color.White.copy(alpha = 0.8f))
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                showZReadHistory = true
+                            },
+                            modifier = Modifier
+                                .weight(0.9f)
+                                .testTag("btn_z_read_history"),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.History,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Column {
+                                Text("Z History", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                Text("(${allZReads.size})", fontSize = 9.sp, color = MaterialTheme.colorScheme.outline)
+                            }
+                        }
                     }
                 }
             }
@@ -573,47 +711,62 @@ fun ReportsScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Stock Retail Value",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.outline
+                                color = MaterialTheme.colorScheme.outline,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = "₱${String.format(Locale.US, "%.2f", reportsState.inventoryRetailValue)}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = EmeraldPrimary
+                                color = EmeraldPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Cost Invested",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.outline
+                                color = MaterialTheme.colorScheme.outline,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = "₱${String.format(Locale.US, "%.2f", reportsState.inventoryCostValue)}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
-                        Column(horizontalAlignment = Alignment.End) {
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            modifier = Modifier.weight(1f)
+                        ) {
                             Text(
                                 text = "Projected Profit",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.outline
+                                color = MaterialTheme.colorScheme.outline,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = "₱${String.format(Locale.US, "%.2f", reportsState.projectedInventoryProfit)}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InStockGreen
+                                color = InStockGreen,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -730,12 +883,17 @@ fun ReportsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f, fill = false)
+                            ) {
                                 Text(
                                     text = sale.receiptNumber,
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Monospace
+                                    fontFamily = FontFamily.Monospace,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Box(
@@ -752,16 +910,20 @@ fun ReportsScreen(
                                         },
                                         color = methodColor,
                                         fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1
                                     )
                                 }
                             }
+
+                            Spacer(modifier = Modifier.width(8.dp))
 
                             Text(
                                 text = "₱${String.format(Locale.US, "%.2f", sale.finalAmount)}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = EmeraldPrimary
+                                color = EmeraldPrimary,
+                                maxLines = 1
                             )
                         }
 
@@ -782,22 +944,28 @@ fun ReportsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = dateStr,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.Gray
-                            )
-
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f, fill = false)) {
+                                Text(
+                                    text = dateStr,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.Gray,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                                 Text(
                                     text = "Profit: ₱${String.format(Locale.US, "%.2f", sale.profit)}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = InStockGreen,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
+                            }
 
-                                Spacer(modifier = Modifier.width(12.dp))
-
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.End
+                            ) {
                                 TextButton(
                                     onClick = { selectedSaleForReceipt = sale },
                                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
@@ -807,7 +975,7 @@ fun ReportsScreen(
                                     Text("Receipt", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                                 }
 
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
 
                                 TextButton(
                                     onClick = { saleToVoid = sale },
@@ -874,6 +1042,51 @@ fun ReportsScreen(
                     Text("Cancel")
                 }
             }
+        )
+    }
+
+    // X-Reading Dialog
+    if (activeXReadSnapshot != null) {
+        XReadDialog(
+            snapshot = activeXReadSnapshot!!,
+            storeProfile = storeProfile,
+            onDismiss = { activeXReadSnapshot = null }
+        )
+    }
+
+    // Z-Reading Prompt / Actual Reconciliation Dialog
+    if (showZReadPrompt != null) {
+        ZReadPromptDialog(
+            snapshot = showZReadPrompt!!,
+            storeProfile = storeProfile,
+            onDismiss = { showZReadPrompt = null },
+            onConfirmZRead = { actualCash, notes ->
+                viewModel.performZRead(actualCash, notes) { generatedZReport ->
+                    showZReadPrompt = null
+                    selectedZReadReport = generatedZReport
+                }
+            }
+        )
+    }
+
+    // Z-Reading Detail & Print Slip Dialog
+    if (selectedZReadReport != null) {
+        ZReadDetailDialog(
+            report = selectedZReadReport!!,
+            storeProfile = storeProfile,
+            onDismiss = { selectedZReadReport = null }
+        )
+    }
+
+    // Z-Reading Historical Archive Viewer
+    if (showZReadHistory) {
+        ZReadHistoryDialog(
+            zReports = allZReads,
+            storeProfile = storeProfile,
+            onSelectReport = { report ->
+                selectedZReadReport = report
+            },
+            onDismiss = { showZReadHistory = false }
         )
     }
 }
@@ -962,13 +1175,19 @@ fun HourlyBucketRow(bucket: HourlySalesBucket, totalSales: Double) {
             Text(
                 text = bucket.timeSlot,
                 style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false)
             )
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "₱${String.format(Locale.US, "%.2f", bucket.salesAmount)} (${bucket.transactionCount} orders)",
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Bold,
-                color = if (bucket.salesAmount > 0) EmeraldPrimary else MaterialTheme.colorScheme.outline
+                color = if (bucket.salesAmount > 0) EmeraldPrimary else MaterialTheme.colorScheme.outline,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
         Spacer(modifier = Modifier.height(3.dp))
@@ -1008,9 +1227,13 @@ fun ReportMetricCard(
                     text = title,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
                 if (badge != null) {
+                    Spacer(modifier = Modifier.width(4.dp))
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
@@ -1021,7 +1244,8 @@ fun ReportMetricCard(
                             text = badge,
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = accentColor
+                            color = accentColor,
+                            maxLines = 1
                         )
                     }
                 }
@@ -1031,14 +1255,18 @@ fun ReportMetricCard(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.ExtraBold,
-                color = accentColor
+                color = accentColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp
+                fontSize = 11.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -1060,12 +1288,22 @@ fun PaymentMethodRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             Text(
-                "₱${String.format(Locale.US, "%.2f", amount)} (${String.format(Locale.US, "%.0f", percent)}%)",
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "₱${String.format(Locale.US, "%.2f", amount)} (${String.format(Locale.US, "%.0f", percent)}%)",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = color
+                color = color,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
         Spacer(modifier = Modifier.height(4.dp))

@@ -13,6 +13,7 @@ class TindaRepository(private val database: AppDatabase) {
     private val debtRecordDao = database.debtRecordDao()
     private val saleDao = database.saleDao()
     private val stockMovementDao = database.stockMovementDao()
+    private val zReadReportDao = database.zReadReportDao()
 
     val allProducts: Flow<List<Product>> = productDao.getAllProducts()
     val lowStockProducts: Flow<List<Product>> = productDao.getLowStockProducts()
@@ -20,6 +21,7 @@ class TindaRepository(private val database: AppDatabase) {
     val allSales: Flow<List<SaleTransaction>> = saleDao.getAllSales()
     val allDebtRecords: Flow<List<DebtRecord>> = debtRecordDao.getAllRecords()
     val recentStockMovements: Flow<List<StockMovement>> = stockMovementDao.getRecentMovements()
+    val allZReads: Flow<List<ZReadReport>> = zReadReportDao.getAllZReads()
 
     suspend fun initDefaultDataIfNeeded() = withContext(Dispatchers.IO) {
         if (productDao.getProductCount() == 0) {
@@ -39,6 +41,7 @@ class TindaRepository(private val database: AppDatabase) {
         debtRecordDao.deleteAllDebtRecords()
         saleDao.deleteAllSales()
         stockMovementDao.deleteAllMovements()
+        zReadReportDao.deleteAllZReads()
 
         productDao.insertAll(SampleData.initialProducts)
         customerDao.insertAll(SampleData.initialCustomers)
@@ -51,6 +54,7 @@ class TindaRepository(private val database: AppDatabase) {
         debtRecordDao.deleteAllDebtRecords()
         saleDao.deleteAllSales()
         stockMovementDao.deleteAllMovements()
+        zReadReportDao.deleteAllZReads()
     }
 
     suspend fun getAllProductsList(): List<Product> = withContext(Dispatchers.IO) {
@@ -302,5 +306,17 @@ class TindaRepository(private val database: AppDatabase) {
                 balanceAfter = newDebt
             )
         )
+    }
+
+    suspend fun getAllZReadsList(): List<ZReadReport> = withContext(Dispatchers.IO) {
+        zReadReportDao.getAllZReadsList()
+    }
+
+    suspend fun getLatestZRead(): ZReadReport? = withContext(Dispatchers.IO) {
+        zReadReportDao.getLatestZRead()
+    }
+
+    suspend fun insertZRead(report: ZReadReport): Long = withContext(Dispatchers.IO) {
+        zReadReportDao.insertZRead(report)
     }
 }

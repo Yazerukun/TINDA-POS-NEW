@@ -77,6 +77,34 @@ data class StockMovement(
     val timestamp: Long = System.currentTimeMillis()
 )
 
+@Entity(tableName = "z_read_reports")
+data class ZReadReport(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val zReadNumber: String, // e.g. "Z-0001"
+    val generatedAt: Long = System.currentTimeMillis(),
+    val periodStart: Long,
+    val periodEnd: Long,
+    val openingFloat: Double = 0.0,
+    val grossSales: Double = 0.0,
+    val netSales: Double = 0.0,
+    val totalProfit: Double = 0.0,
+    val transactionCount: Int = 0,
+    val cashSales: Double = 0.0,
+    val gcashSales: Double = 0.0,
+    val creditSales: Double = 0.0,
+    val customerDebtPaymentsCollected: Double = 0.0,
+    val totalDiscounts: Double = 0.0,
+    val voidedCount: Int = 0,
+    val voidedTotal: Double = 0.0,
+    val expectedCashInDrawer: Double = 0.0,
+    val actualCashCounted: Double? = null,
+    val cashShortageOver: Double? = null, // actual - expected
+    val notes: String = "",
+    val firstReceiptNumber: String = "N/A",
+    val lastReceiptNumber: String = "N/A"
+)
+
 data class CartItem(
     val product: Product,
     val quantity: Int

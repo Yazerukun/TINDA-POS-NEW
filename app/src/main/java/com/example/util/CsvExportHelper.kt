@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import com.example.data.Product
 import com.example.data.SaleTransaction
+import com.example.data.ZReadReport
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -55,6 +56,29 @@ object CsvExportHelper {
                 val customerEscaped = escapeCsv(s.customerName ?: "Walk-in")
                 val statusStr = if (s.isVoided) "VOIDED" else "COMPLETED"
                 writer.write("${s.receiptNumber},$dateStr,$itemsEscaped,${s.paymentMethod},$customerEscaped,${String.format(Locale.US, "%.2f", s.totalAmount)},${String.format(Locale.US, "%.2f", s.discountAmount)},${s.discountType},${String.format(Locale.US, "%.2f", s.finalAmount)},${String.format(Locale.US, "%.2f", s.amountPaid)},${String.format(Locale.US, "%.2f", s.changeAmount)},$statusStr\n")
+            }
+        }
+        return file
+    }
+
+    fun exportZReadReportsToCsv(context: Context, zReports: List<ZReadReport>): File {
+        val exportDir = File(context.cacheDir, "exports")
+        if (!exportDir.exists()) exportDir.mkdirs()
+
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val file = File(exportDir, "Tinda_ZRead_History_$timestamp.csv")
+
+        val dateFmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+        file.bufferedWriter().use { writer ->
+            writer.write("Z-Read #,Generated At,Shift Start,Shift End,Opening Float (PHP),Gross Sales (PHP),Discounts (PHP),Net Sales (PHP),Profit (PHP),Transactions,Cash Sales (PHP),GCash Sales (PHP),Credit Sales (PHP),Debt Collected (PHP),Expected Cash (PHP),Actual Cash Count (PHP),Shortage/Over (PHP),First Receipt,Last Receipt,Notes\n")
+            for (z in zReports) {
+                val genAt = dateFmt.format(Date(z.generatedAt))
+                val pStart = dateFmt.format(Date(z.periodStart))
+                val pEnd = dateFmt.format(Date(z.periodEnd))
+                val actCashStr = if (z.actualCashCounted != null) String.format(Locale.US, "%.2f", z.actualCashCounted) else "N/A"
+                val varStr = if (z.cashShortageOver != null) String.format(Locale.US, "%.2f", z.cashShortageOver) else "0.00"
+                val notesEscaped = escapeCsv(z.notes)
+                writer.write("${z.zReadNumber},$genAt,$pStart,$pEnd,${String.format(Locale.US, "%.2f", z.openingFloat)},${String.format(Locale.US, "%.2f", z.grossSales)},${String.format(Locale.US, "%.2f", z.totalDiscounts)},${String.format(Locale.US, "%.2f", z.netSales)},${String.format(Locale.US, "%.2f", z.totalProfit)},${z.transactionCount},${String.format(Locale.US, "%.2f", z.cashSales)},${String.format(Locale.US, "%.2f", z.gcashSales)},${String.format(Locale.US, "%.2f", z.creditSales)},${String.format(Locale.US, "%.2f", z.customerDebtPaymentsCollected)},${String.format(Locale.US, "%.2f", z.expectedCashInDrawer)},$actCashStr,$varStr,${z.firstReceiptNumber},${z.lastReceiptNumber},$notesEscaped\n")
             }
         }
         return file

@@ -157,3 +157,24 @@ interface StockMovementDao {
     @Query("DELETE FROM stock_movements")
     suspend fun deleteAllMovements()
 }
+
+@Dao
+interface ZReadReportDao {
+    @Query("SELECT * FROM z_read_reports ORDER BY generatedAt DESC")
+    fun getAllZReads(): Flow<List<ZReadReport>>
+
+    @Query("SELECT * FROM z_read_reports ORDER BY generatedAt DESC")
+    suspend fun getAllZReadsList(): List<ZReadReport>
+
+    @Query("SELECT * FROM z_read_reports ORDER BY generatedAt DESC LIMIT 1")
+    suspend fun getLatestZRead(): ZReadReport?
+
+    @Query("SELECT COUNT(*) FROM z_read_reports")
+    suspend fun getZReadCount(): Int
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertZRead(report: ZReadReport): Long
+
+    @Query("DELETE FROM z_read_reports")
+    suspend fun deleteAllZReads()
+}

@@ -12,6 +12,7 @@ import com.example.data.Product
 import com.example.data.SaleTransaction
 import com.example.data.StockMovement
 import com.example.data.TindaRepository
+import com.example.data.ZReadReport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +21,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 data class StoreProfile(
     val storeName: String = "Tinda Retail Store",
@@ -73,6 +77,27 @@ data class RealtimeReportsState(
     val projectedInventoryProfit: Double = 0.0,
     val lastTransactionTimestamp: Long? = null,
     val totalSalesRowsInDb: Int = 0
+)
+
+data class XReadSnapshot(
+    val generatedAt: Long = System.currentTimeMillis(),
+    val periodStart: Long = 0L,
+    val periodEnd: Long = System.currentTimeMillis(),
+    val openingFloat: Double = 0.0,
+    val grossSales: Double = 0.0,
+    val netSales: Double = 0.0,
+    val totalProfit: Double = 0.0,
+    val transactionCount: Int = 0,
+    val cashSales: Double = 0.0,
+    val gcashSales: Double = 0.0,
+    val creditSales: Double = 0.0,
+    val customerDebtPaymentsCollected: Double = 0.0,
+    val totalDiscounts: Double = 0.0,
+    val voidedCount: Int = 0,
+    val voidedTotal: Double = 0.0,
+    val expectedCashInDrawer: Double = 0.0,
+    val firstReceiptNumber: String = "N/A",
+    val lastReceiptNumber: String = "N/A"
 )
 
 class TindaViewModel(application: Application) : AndroidViewModel(application) {
@@ -299,6 +324,9 @@ class TindaViewModel(application: Application) : AndroidViewModel(application) {
     val reportPeriod: StateFlow<ReportPeriod> = _reportPeriod.asStateFlow()
 
     val allDebtRecords: StateFlow<List<DebtRecord>> = repository.allDebtRecords
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val allZReads: StateFlow<List<ZReadReport>> = repository.allZReads
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val realtimeReports: StateFlow<RealtimeReportsState> = combine(
@@ -770,6 +798,110 @@ class TindaViewModel(application: Application) : AndroidViewModel(application) {
                     customerName = null
                 )
             }
+        }
+    }
+
+    suspend fun generateCurrentXRead(): XReadSnapshot {
+        val latestZ = repository.getLatestZRead()
+        val periodStart = latestZ?.periodEnd ?: run {
+            val cal = Calendar.getInstance()
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+            cal.timeInMillis
+        }
+        val periodEnd = System.currentTimeMillis()
+
+        val allSalesList = repository.getAllSalesList()
+        val shiftSales = allSalesList.filter { it.timestamp >= periodStart && it.timestamp <= periodEnd }
+        val validSales = shiftSales.filter { !it.isVoided }
+        val voidedSales = shiftSales.filter { it.isVoided }
+
+        val allDebts = repository.getAllDebtRecordsList()
+        val shiftDebtPayments = allDebts.filter { it.date >= periodStart && it.date <= periodEnd && it.type == "PAYMENT" }
+        val debtCollected = shiftDebtPayments.sumOf { it.amount }
+
+        val floatAmt = _storeProfile.value.startingCashDrawer
+        val grossSales = validSales.sumOf { it.totalAmount }
+        val discounts = validSales.sumOf { it.discountAmount }
+        val netSales = validSales.sumOf { it.finalAmount }
+        val totalProfit = validSales.sumOf { it.profit }
+
+        val cashSales = validSales.filter { it.paymentMethod == "CASH" }.sumOf { it.finalAmount }
+        val gcashSales = validSales.filter { it.paymentMethod == "GCASH_MAYA" }.sumOf { it.finalAmount }
+        val creditSales = validSales.filter { it.paymentMethod == "UTANG_LENDING" }.sumOf { it.finalAmount }
+
+        val expectedCash = floatAmt + cashSales + debtCollected
+
+        val sortedShiftSales = shiftSales.sortedBy { it.timestamp }
+        val firstRcpt = sortedShiftSales.firstOrNull()?.receiptNumber ?: "None"
+        val lastRcpt = sortedShiftSales.lastOrNull()?.receiptNumber ?: "None"
+
+        return XReadSnapshot(
+            generatedAt = periodEnd,
+            periodStart = periodStart,
+            periodEnd = periodEnd,
+            openingFloat = floatAmt,
+            grossSales = grossSales,
+            netSales = netSales,
+            totalProfit = totalProfit,
+            transactionCount = validSales.size,
+            cashSales = cashSales,
+            gcashSales = gcashSales,
+            creditSales = creditSales,
+            customerDebtPaymentsCollected = debtCollected,
+            totalDiscounts = discounts,
+            voidedCount = voidedSales.size,
+            voidedTotal = voidedSales.sumOf { it.finalAmount },
+            expectedCashInDrawer = expectedCash,
+            firstReceiptNumber = firstRcpt,
+            lastReceiptNumber = lastRcpt
+        )
+    }
+
+    fun performZRead(
+        actualCash: Double?,
+        notes: String = "",
+        onCompleted: (ZReadReport) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val snapshot = generateCurrentXRead()
+            val nextZNumber = "Z-" + String.format(Locale.US, "%04d", repository.allZReads.let {
+                // Determine next sequential index
+                repository.getAllZReadsList().size + 1
+            })
+
+            val shortageOver = if (actualCash != null) actualCash - snapshot.expectedCashInDrawer else null
+
+            val zReport = ZReadReport(
+                zReadNumber = nextZNumber,
+                generatedAt = System.currentTimeMillis(),
+                periodStart = snapshot.periodStart,
+                periodEnd = snapshot.periodEnd,
+                openingFloat = snapshot.openingFloat,
+                grossSales = snapshot.grossSales,
+                netSales = snapshot.netSales,
+                totalProfit = snapshot.totalProfit,
+                transactionCount = snapshot.transactionCount,
+                cashSales = snapshot.cashSales,
+                gcashSales = snapshot.gcashSales,
+                creditSales = snapshot.creditSales,
+                customerDebtPaymentsCollected = snapshot.customerDebtPaymentsCollected,
+                totalDiscounts = snapshot.totalDiscounts,
+                voidedCount = snapshot.voidedCount,
+                voidedTotal = snapshot.voidedTotal,
+                expectedCashInDrawer = snapshot.expectedCashInDrawer,
+                actualCashCounted = actualCash,
+                cashShortageOver = shortageOver,
+                notes = notes,
+                firstReceiptNumber = snapshot.firstReceiptNumber,
+                lastReceiptNumber = snapshot.lastReceiptNumber
+            )
+
+            val id = repository.insertZRead(zReport)
+            val savedReport = zReport.copy(id = id)
+            onCompleted(savedReport)
         }
     }
 }

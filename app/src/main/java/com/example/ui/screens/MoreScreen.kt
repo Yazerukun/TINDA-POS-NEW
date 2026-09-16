@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Store
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -101,6 +102,7 @@ fun MoreScreen(
     var restoreSuccessMessage by remember { mutableStateOf<String?>(null) }
     var showResetConfirm by remember { mutableStateOf(false) }
     var showClearConfirm by remember { mutableStateOf(false) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
 
     // Backup restore launcher
     val restoreFileLauncher = rememberLauncherForActivityResult(
@@ -285,6 +287,15 @@ fun MoreScreen(
                         subtitle = "Reconfigure store name, phone, receipt notes and float",
                         onClick = onOpenSetupWizard
                     )
+                    HorizontalDivider(color = BorderSubtle, modifier = Modifier.padding(horizontal = 16.dp))
+                    MoreNavRow(
+                        icon = Icons.Default.SystemUpdate,
+                        iconTint = EmeraldInteractive,
+                        title = "Software Updater",
+                        subtitle = "Check for new versions with download progress",
+                        onClick = { showUpdateDialog = true },
+                        testTag = "more_nav_updater"
+                    )
                 }
             }
         }
@@ -383,6 +394,12 @@ fun MoreScreen(
                     Text("Cancel")
                 }
             }
+        )
+    }
+
+    if (showUpdateDialog) {
+        SoftwareUpdateDialog(
+            onDismiss = { showUpdateDialog = false }
         )
     }
 }
