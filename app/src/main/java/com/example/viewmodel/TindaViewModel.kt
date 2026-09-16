@@ -12,6 +12,7 @@ import com.example.data.Product
 import com.example.data.SaleTransaction
 import com.example.data.StockMovement
 import com.example.data.TindaRepository
+import com.example.data.UserAccount
 import com.example.data.ZReadReport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -182,12 +183,109 @@ class TindaViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // User Management & Authentication
+    val allActiveUsers: StateFlow<List<UserAccount>> = repository.allActiveUsers
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val allUsers: StateFlow<List<UserAccount>> = repository.allUsers
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _currentUser = MutableStateFlow<UserAccount?>(null)
+    val currentUser: StateFlow<UserAccount?> = _currentUser.asStateFlow()
+
+    private val _loginError = MutableStateFlow<String?>(null)
+    val loginError: StateFlow<String?> = _loginError.asStateFlow()
+
+    fun clearLoginError() {
+        _loginError.value = null
+    }
+
+    fun loginWithPin(user: UserAccount, enteredPin: String): Boolean {
+        if (user.pin == enteredPin.trim()) {
+            _currentUser.value = user
+            _loginError.value = null
+            prefs.edit().putLong("last_logged_in_user_id", user.id).apply()
+            return true
+        } else {
+            _loginError.value = "Incorrect PIN for ${user.displayName}. Please try again."
+            return false
+        }
+    }
+
+    fun loginWithCredentials(username: String, enteredPassword: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val user = repository.getUserByUsername(username.trim())
+            if (user != null && user.isActive && user.password == enteredPassword) {
+                _currentUser.value = user
+                _loginError.value = null
+                prefs.edit().putLong("last_logged_in_user_id", user.id).apply()
+                onResult(true)
+            } else {
+                _loginError.value = "Invalid username or password."
+                onResult(false)
+            }
+        }
+    }
+
+    fun logout() {
+        _currentUser.value = null
+        _loginError.value = null
+        prefs.edit().remove("last_logged_in_user_id").apply()
+    }
+
+    fun lockScreen() {
+        _currentUser.value = null
+        _loginError.value = null
+    }
+
+    fun addUser(user: UserAccount, onComplete: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val existing = repository.getUserByUsername(user.username.trim())
+            if (existing != null) {
+                onComplete(false, "Username '${user.username}' is already taken.")
+                return@launch
+            }
+            repository.insertUser(user)
+            triggerAutoSafetyBackup()
+            onComplete(true, "User ${user.displayName} created successfully.")
+        }
+    }
+
+    fun updateUser(user: UserAccount, onComplete: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            repository.updateUser(user)
+            if (_currentUser.value?.id == user.id) {
+                _currentUser.value = user
+            }
+            triggerAutoSafetyBackup()
+            onComplete(true, "User updated successfully.")
+        }
+    }
+
+    fun deleteUser(user: UserAccount, onComplete: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val all = repository.getAllUsersList()
+            val admins = all.filter { it.role.equals("ADMIN", ignoreCase = true) }
+            if (user.role.equals("ADMIN", ignoreCase = true) && admins.size <= 1) {
+                onComplete(false, "Cannot delete the only Admin account.")
+                return@launch
+            }
+            repository.deleteUser(user)
+            if (_currentUser.value?.id == user.id) {
+                logout()
+            }
+            triggerAutoSafetyBackup()
+            onComplete(true, "User deleted.")
+        }
+    }
+
     suspend fun exportStoreBackupData(): com.example.util.StoreBackupData {
         val profile = _storeProfile.value
         val products = repository.getAllProductsList()
         val customers = repository.getAllCustomersList()
         val sales = repository.getAllSalesList()
         val debts = repository.getAllDebtRecordsList()
+        val users = repository.getAllUsersList()
 
         return com.example.util.StoreBackupData(
             exportDate = System.currentTimeMillis(),
@@ -200,7 +298,8 @@ class TindaViewModel(application: Application) : AndroidViewModel(application) {
             products = products,
             customers = customers,
             sales = sales,
-            debtRecords = debts
+            debtRecords = debts,
+            users = users
         )
     }
 
@@ -219,7 +318,8 @@ class TindaViewModel(application: Application) : AndroidViewModel(application) {
                 products = backup.products,
                 customers = backup.customers,
                 sales = backup.sales,
-                debtRecords = backup.debtRecords
+                debtRecords = backup.debtRecords,
+                users = backup.users
             )
             onComplete()
         }

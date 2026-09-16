@@ -6,6 +6,7 @@ import com.example.data.CustomerDebt
 import com.example.data.DebtRecord
 import com.example.data.Product
 import com.example.data.SaleTransaction
+import com.example.data.UserAccount
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -24,7 +25,8 @@ data class StoreBackupData(
     val products: List<Product>,
     val customers: List<CustomerDebt>,
     val sales: List<SaleTransaction>,
-    val debtRecords: List<DebtRecord>
+    val debtRecords: List<DebtRecord>,
+    val users: List<UserAccount> = emptyList()
 )
 
 object JsonBackupHelper {
@@ -116,6 +118,23 @@ object JsonBackupHelper {
             debtArray.put(dObj)
         }
         root.put("debtRecords", debtArray)
+
+        // Users
+        val usersArray = JSONArray()
+        for (u in backup.users) {
+            val uObj = JSONObject().apply {
+                put("id", u.id)
+                put("username", u.username)
+                put("displayName", u.displayName)
+                put("role", u.role)
+                put("pin", u.pin)
+                put("password", u.password)
+                put("isActive", u.isActive)
+                put("createdAt", u.createdAt)
+            }
+            usersArray.put(uObj)
+        }
+        root.put("users", usersArray)
 
         return root.toString(2)
     }
@@ -234,6 +253,27 @@ object JsonBackupHelper {
             }
         }
 
+        // Parse Users
+        val usersList = mutableListOf<UserAccount>()
+        val usersArray = root.optJSONArray("users")
+        if (usersArray != null) {
+            for (i in 0 until usersArray.length()) {
+                val u = usersArray.getJSONObject(i)
+                usersList.add(
+                    UserAccount(
+                        id = u.optLong("id", 0L),
+                        username = u.optString("username", "cashier"),
+                        displayName = u.optString("displayName", "Staff"),
+                        role = u.optString("role", "CASHIER"),
+                        pin = u.optString("pin", "0000"),
+                        password = u.optString("password", "cashier123"),
+                        isActive = u.optBoolean("isActive", true),
+                        createdAt = u.optLong("createdAt", System.currentTimeMillis())
+                    )
+                )
+            }
+        }
+
         return StoreBackupData(
             exportDate = exportDate,
             storeName = storeName,
@@ -245,7 +285,8 @@ object JsonBackupHelper {
             products = productsList,
             customers = customersList,
             sales = salesList,
-            debtRecords = debtList
+            debtRecords = debtList,
+            users = usersList
         )
     }
 

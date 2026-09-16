@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.Store
@@ -81,6 +83,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.InventoryScreen
 import com.example.ui.screens.LendingScreen
+import com.example.ui.screens.LoginScreen
 import com.example.ui.screens.MoreScreen
 import com.example.ui.screens.PosScreen
 import com.example.ui.screens.ReportsScreen
@@ -124,7 +127,13 @@ fun TindaAppRoot(viewModel: TindaViewModel = viewModel()) {
     val showSetupWizard by viewModel.showSetupWizard.collectAsStateWithLifecycle()
     val cartItems by viewModel.cartItems.collectAsStateWithLifecycle()
     val lowStockProducts by viewModel.lowStockProducts.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val cartCount = cartItems.sumOf { it.quantity }
+
+    if (currentUser == null) {
+        LoginScreen(viewModel = viewModel)
+        return
+    }
 
     // Intercept system back gestures to return to Home or previous screen smoothly
     BackHandler(enabled = currentTab != 0 || showStoreSettingsDialog) {
@@ -287,6 +296,52 @@ fun TindaAppRoot(viewModel: TindaViewModel = viewModel()) {
                             }
                         },
                         actions = {
+                            // Current User & Quick Lock
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = EmeraldPrimary.copy(alpha = 0.12f),
+                                border = BorderStroke(1.dp, EmeraldPrimary.copy(alpha = 0.25f)),
+                                modifier = Modifier
+                                    .clickable { viewModel.lockScreen() }
+                                    .testTag("topbar_user_lock_btn")
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .clip(CircleShape)
+                                            .background(EmeraldPrimary),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = currentUser?.displayName?.take(1)?.uppercase() ?: "U",
+                                            color = Color.White,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = currentUser?.displayName ?: "User",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = EmeraldInteractive,
+                                        maxLines = 1
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.Lock,
+                                        contentDescription = "Lock Terminal",
+                                        tint = TextSecondary,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(4.dp))
+
                             if (!storeProfile.isSetupCompleted) {
                                 AssistChip(
                                     onClick = { viewModel.openSetupWizard() },

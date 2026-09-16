@@ -115,3 +115,17 @@ data class CartItem(
     val subtotalCost: Double
         get() = product.costPrice * quantity
 }
+
+@Entity(tableName = "user_accounts")
+data class UserAccount(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val username: String,
+    val displayName: String,
+    val role: String = "CASHIER", // "ADMIN", "MANAGER", "CASHIER"
+    val pin: String = "1234",     // 4-digit Quick PIN
+    val password: String = "admin123",
+    val isActive: Boolean = true,
+    val createdAt: Long = System.currentTimeMillis()
+)
+

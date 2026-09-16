@@ -178,3 +178,40 @@ interface ZReadReportDao {
     @Query("DELETE FROM z_read_reports")
     suspend fun deleteAllZReads()
 }
+
+@Dao
+interface UserAccountDao {
+    @Query("SELECT * FROM user_accounts WHERE isActive = 1 ORDER BY role ASC, displayName ASC")
+    fun getAllActiveUsers(): Flow<List<UserAccount>>
+
+    @Query("SELECT * FROM user_accounts ORDER BY id ASC")
+    fun getAllUsers(): Flow<List<UserAccount>>
+
+    @Query("SELECT * FROM user_accounts ORDER BY id ASC")
+    suspend fun getAllUsersList(): List<UserAccount>
+
+    @Query("SELECT * FROM user_accounts WHERE id = :id LIMIT 1")
+    suspend fun getUserById(id: Long): UserAccount?
+
+    @Query("SELECT * FROM user_accounts WHERE username = :username LIMIT 1")
+    suspend fun getUserByUsername(username: String): UserAccount?
+
+    @Query("SELECT COUNT(*) FROM user_accounts")
+    suspend fun getUserCount(): Int
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUser(user: UserAccount): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(users: List<UserAccount>)
+
+    @Update
+    suspend fun updateUser(user: UserAccount)
+
+    @Delete
+    suspend fun deleteUser(user: UserAccount)
+
+    @Query("DELETE FROM user_accounts WHERE id = :id")
+    suspend fun deleteUserById(id: Long)
+}
+

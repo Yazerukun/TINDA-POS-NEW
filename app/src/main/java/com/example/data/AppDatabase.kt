@@ -14,9 +14,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         DebtRecord::class,
         SaleTransaction::class,
         StockMovement::class,
-        ZReadReport::class
+        ZReadReport::class,
+        UserAccount::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -26,6 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun saleDao(): SaleDao
     abstract fun stockMovementDao(): StockMovementDao
     abstract fun zReadReportDao(): ZReadReportDao
+    abstract fun userAccountDao(): UserAccountDao
 
     companion object {
         @Volatile
@@ -69,6 +71,23 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `user_accounts` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `username` TEXT NOT NULL,
+                        `displayName` TEXT NOT NULL,
+                        `role` TEXT NOT NULL,
+                        `pin` TEXT NOT NULL,
+                        `password` TEXT NOT NULL,
+                        `isActive` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -76,7 +95,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "tinda_pos_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigrationOnDowngrade(false)
                     .build()
                 INSTANCE = instance

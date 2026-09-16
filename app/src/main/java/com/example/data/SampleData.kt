@@ -317,4 +317,25 @@ object SampleData {
             )
         )
     }
+
+    val initialUsers = listOf(
+        UserAccount(
+            id = 1,
+            username = "admin",
+            displayName = "Store Owner",
+            role = "ADMIN",
+            pin = "1234",
+            password = "admin123",
+            isActive = true
+        ),
+        UserAccount(
+            id = 2,
+            username = "cashier",
+            displayName = "Cashier 1",
+            role = "CASHIER",
+            pin = "0000",
+            password = "cashier123",
+            isActive = true
+        )
+    )
 }

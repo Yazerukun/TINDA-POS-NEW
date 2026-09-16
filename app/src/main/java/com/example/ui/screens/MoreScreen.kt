@@ -29,8 +29,12 @@ import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.RestartAlt
@@ -95,6 +99,8 @@ fun MoreScreen(
     val coroutineScope = rememberCoroutineScope()
     val storeProfile by viewModel.storeProfile.collectAsStateWithLifecycle()
     val allCustomers by viewModel.allCustomers.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val allUsers by viewModel.allUsers.collectAsStateWithLifecycle()
     val totalActiveDebtors = allCustomers.count { it.totalDebt > 0 }
     val totalReceivables = allCustomers.sumOf { it.totalDebt }
 
@@ -103,6 +109,7 @@ fun MoreScreen(
     var showResetConfirm by remember { mutableStateOf(false) }
     var showClearConfirm by remember { mutableStateOf(false) }
     var showUpdateDialog by remember { mutableStateOf(false) }
+    var showUserManagerDialog by remember { mutableStateOf(false) }
 
     // Backup restore launcher
     val restoreFileLauncher = rememberLauncherForActivityResult(
@@ -232,6 +239,41 @@ fun MoreScreen(
                         subtitle = "View completed, printed & voided sales",
                         onClick = onNavigateToReports,
                         testTag = "more_nav_transactions"
+                    )
+                }
+            }
+        }
+
+        // Section: USERS & AUTHENTICATION
+        item {
+            MoreSectionTitle("USERS & SECURITY")
+            TindaCard(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    MoreNavRow(
+                        icon = Icons.Default.ManageAccounts,
+                        iconTint = EmeraldInteractive,
+                        title = "Staff Accounts & PINs",
+                        subtitle = "${allUsers.size} accounts • Active: ${currentUser?.displayName ?: "None"}",
+                        onClick = { showUserManagerDialog = true },
+                        testTag = "more_nav_user_accounts"
+                    )
+                    HorizontalDivider(color = BorderSubtle, modifier = Modifier.padding(horizontal = 16.dp))
+                    MoreNavRow(
+                        icon = Icons.Default.Lock,
+                        iconTint = WarningAmber,
+                        title = "Lock Terminal",
+                        subtitle = "Quick-lock terminal screen for security",
+                        onClick = { viewModel.lockScreen() },
+                        testTag = "more_nav_lock_terminal"
+                    )
+                    HorizontalDivider(color = BorderSubtle, modifier = Modifier.padding(horizontal = 16.dp))
+                    MoreNavRow(
+                        icon = Icons.Default.Logout,
+                        iconTint = DangerSoftRed,
+                        title = "Log Out",
+                        subtitle = "Sign out of ${currentUser?.displayName ?: "account"}",
+                        onClick = { viewModel.logout() },
+                        testTag = "more_nav_logout"
                     )
                 }
             }
@@ -403,6 +445,13 @@ fun MoreScreen(
             onPreInstallBackup = {
                 viewModel.triggerAutoSafetyBackup()
             }
+        )
+    }
+
+    if (showUserManagerDialog) {
+        UserManagerDialog(
+            viewModel = viewModel,
+            onDismiss = { showUserManagerDialog = false }
         )
     }
 }

@@ -14,6 +14,7 @@ class TindaRepository(private val database: AppDatabase) {
     private val saleDao = database.saleDao()
     private val stockMovementDao = database.stockMovementDao()
     private val zReadReportDao = database.zReadReportDao()
+    private val userAccountDao = database.userAccountDao()
 
     val allProducts: Flow<List<Product>> = productDao.getAllProducts()
     val lowStockProducts: Flow<List<Product>> = productDao.getLowStockProducts()
@@ -22,6 +23,8 @@ class TindaRepository(private val database: AppDatabase) {
     val allDebtRecords: Flow<List<DebtRecord>> = debtRecordDao.getAllRecords()
     val recentStockMovements: Flow<List<StockMovement>> = stockMovementDao.getRecentMovements()
     val allZReads: Flow<List<ZReadReport>> = zReadReportDao.getAllZReads()
+    val allActiveUsers: Flow<List<UserAccount>> = userAccountDao.getAllActiveUsers()
+    val allUsers: Flow<List<UserAccount>> = userAccountDao.getAllUsers()
 
     suspend fun getProductCount(): Int = withContext(Dispatchers.IO) { productDao.getProductCount() }
 
@@ -34,6 +37,9 @@ class TindaRepository(private val database: AppDatabase) {
         }
         if (saleDao.getSaleCount() == 0) {
             saleDao.insertAll(SampleData.generateInitialSales())
+        }
+        if (userAccountDao.getUserCount() == 0) {
+            userAccountDao.insertAll(SampleData.initialUsers)
         }
     }
 
@@ -48,6 +54,9 @@ class TindaRepository(private val database: AppDatabase) {
         productDao.insertAll(SampleData.initialProducts)
         customerDao.insertAll(SampleData.initialCustomers)
         saleDao.insertAll(SampleData.generateInitialSales())
+        if (userAccountDao.getUserCount() == 0) {
+            userAccountDao.insertAll(SampleData.initialUsers)
+        }
     }
 
     suspend fun clearAllDataForFreshStart() = withContext(Dispatchers.IO) {
@@ -79,7 +88,8 @@ class TindaRepository(private val database: AppDatabase) {
         products: List<Product>,
         customers: List<CustomerDebt>,
         sales: List<SaleTransaction>,
-        debtRecords: List<DebtRecord>
+        debtRecords: List<DebtRecord>,
+        users: List<UserAccount> = emptyList()
     ) = withContext(Dispatchers.IO) {
         productDao.deleteAllProducts()
         customerDao.deleteAllCustomers()
@@ -91,6 +101,11 @@ class TindaRepository(private val database: AppDatabase) {
         if (customers.isNotEmpty()) customerDao.insertAll(customers)
         if (sales.isNotEmpty()) saleDao.insertAll(sales)
         if (debtRecords.isNotEmpty()) debtRecordDao.insertAll(debtRecords)
+        if (users.isNotEmpty()) {
+            userAccountDao.insertAll(users)
+        } else if (userAccountDao.getUserCount() == 0) {
+            userAccountDao.insertAll(SampleData.initialUsers)
+        }
     }
 
     fun searchProducts(query: String): Flow<List<Product>> = productDao.searchProducts(query)
@@ -320,5 +335,37 @@ class TindaRepository(private val database: AppDatabase) {
 
     suspend fun insertZRead(report: ZReadReport): Long = withContext(Dispatchers.IO) {
         zReadReportDao.insertZRead(report)
+    }
+
+    suspend fun getAllUsersList(): List<UserAccount> = withContext(Dispatchers.IO) {
+        userAccountDao.getAllUsersList()
+    }
+
+    suspend fun getUserByUsername(username: String): UserAccount? = withContext(Dispatchers.IO) {
+        userAccountDao.getUserByUsername(username)
+    }
+
+    suspend fun getUserById(id: Long): UserAccount? = withContext(Dispatchers.IO) {
+        userAccountDao.getUserById(id)
+    }
+
+    suspend fun insertUser(user: UserAccount): Long = withContext(Dispatchers.IO) {
+        userAccountDao.insertUser(user)
+    }
+
+    suspend fun updateUser(user: UserAccount) = withContext(Dispatchers.IO) {
+        userAccountDao.updateUser(user)
+    }
+
+    suspend fun deleteUser(user: UserAccount) = withContext(Dispatchers.IO) {
+        userAccountDao.deleteUser(user)
+    }
+
+    suspend fun deleteUserById(id: Long) = withContext(Dispatchers.IO) {
+        userAccountDao.deleteUserById(id)
+    }
+
+    suspend fun getUserCount(): Int = withContext(Dispatchers.IO) {
+        userAccountDao.getUserCount()
     }
 }
