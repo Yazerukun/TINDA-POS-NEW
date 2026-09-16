@@ -399,7 +399,10 @@ fun MoreScreen(
 
     if (showUpdateDialog) {
         SoftwareUpdateDialog(
-            onDismiss = { showUpdateDialog = false }
+            onDismiss = { showUpdateDialog = false },
+            onPreInstallBackup = {
+                viewModel.triggerAutoSafetyBackup()
+            }
         )
     }
 }

@@ -131,7 +131,8 @@ private const val KEY_CUSTOM_UPDATE_URL = "custom_apk_update_url"
 
 @Composable
 fun SoftwareUpdateDialog(
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onPreInstallBackup: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -761,6 +762,7 @@ fun SoftwareUpdateDialog(
 
                                 Button(
                                     onClick = {
+                                        onPreInstallBackup?.invoke()
                                         installApk(context, state.apkFile)
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = InStockGreen),

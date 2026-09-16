@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -140,18 +142,19 @@ fun XReadDialog(
     ) {
         Surface(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(0.95f),
+                .padding(horizontal = 12.dp, vertical = 18.dp)
+                .fillMaxWidth(0.96f)
+                .fillMaxHeight(0.92f),
             shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
-                    .verticalScroll(rememberScrollState())
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                // Header Bar
+                // Header Bar (Pinned at top)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -192,22 +195,28 @@ fun XReadDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Thermal Slip Paper Simulation (High-Definition, Crisp Contrast)
-                Card(
+                // Scrollable Thermal Slip Container (Takes all available middle space)
+                Box(
                     modifier = Modifier
+                        .weight(1f)
                         .fillMaxWidth()
-                        .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp)),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
-                    Column(
+                    Card(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp)),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
                         // Store branding
                         Text(
                             text = storeProfile.storeName,
@@ -329,75 +338,79 @@ fun XReadDialog(
                         )
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-                // Actions: Print, Share, Close
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Actions: Print, Share, Close (PINNED AT BOTTOM)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        printThermalReport(
+                            context = context,
+                            reportTitle = "TINDA_X_READ",
+                            printHtml = generateHtmlSlip("X-READ AUDIT REPORT", receiptPlainText, storeProfile)
+                        )
+                    },
+                    modifier = Modifier
+                        .weight(1.1f)
+                        .height(46.dp)
+                        .testTag("btn_print_x_read"),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, BorderElevated),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = BrandSurfaceElevated,
+                        contentColor = TextPrimary
+                    ),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = {
-                            printThermalReport(
-                                context = context,
-                                reportTitle = "TINDA_X_READ",
-                                printHtml = generateHtmlSlip("X-READ AUDIT REPORT", receiptPlainText, storeProfile)
-                            )
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(44.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, BorderElevated),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = BrandSurfaceElevated,
-                            contentColor = TextPrimary
-                        ),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
-                    ) {
-                        Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldInteractive)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Print Slip", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            val sendIntent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                putExtra(Intent.EXTRA_TEXT, receiptPlainText)
-                                type = "text/plain"
-                            }
-                            context.startActivity(Intent.createChooser(sendIntent, "Share X-Read Report"))
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(44.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, BorderElevated),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = BrandSurfaceElevated,
-                            contentColor = TextPrimary
-                        ),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
-                    ) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldInteractive)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Share", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    }
-
-                    Button(
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(44.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
-                    ) {
-                        Text("Close", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    }
+                    Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(18.dp), tint = EmeraldInteractive)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Print Slip", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
+
+                OutlinedButton(
+                    onClick = {
+                        val sendIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, receiptPlainText)
+                            type = "text/plain"
+                        }
+                        context.startActivity(Intent.createChooser(sendIntent, "Share X-Read Report"))
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp)
+                        .testTag("btn_share_x_read"),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, BorderElevated),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = BrandSurfaceElevated,
+                        contentColor = TextPrimary
+                    ),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(17.dp), tint = EmeraldInteractive)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Share", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .weight(0.9f)
+                        .height(46.dp)
+                        .testTag("btn_close_x_read"),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                ) {
+                    Text("Close", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
+            }
             }
         }
     }
@@ -667,18 +680,19 @@ fun ZReadDetailDialog(
     ) {
         Surface(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(0.95f),
+                .padding(horizontal = 12.dp, vertical = 18.dp)
+                .fillMaxWidth(0.96f)
+                .fillMaxHeight(0.92f),
             shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
-                    .verticalScroll(rememberScrollState())
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                // Header
+                // Header (Pinned at top)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -714,23 +728,29 @@ fun ZReadDetailDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Slip presentation (High-Definition, Crisp Contrast)
-                Card(
+                // Scrollable Slip Container (Takes all available middle space)
+                Box(
                     modifier = Modifier
+                        .weight(1f)
                         .fillMaxWidth()
-                        .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp)),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
-                    Column(
+                    Card(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp)),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
-                        Text(
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            Text(
                             text = storeProfile.storeName,
                             fontWeight = FontWeight.Black,
                             fontSize = 17.sp,
@@ -814,74 +834,79 @@ fun ZReadDetailDialog(
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Actions: Print, Share, Done (PINNED AT BOTTOM)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        printThermalReport(
+                            context = context,
+                            reportTitle = "TINDA_${report.zReadNumber}",
+                            printHtml = generateHtmlSlip("OFFICIAL Z-READ REPORT", receiptPlainText, storeProfile)
+                        )
+                    },
+                    modifier = Modifier
+                        .weight(1.1f)
+                        .height(46.dp)
+                        .testTag("btn_print_z_read"),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, BorderElevated),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = BrandSurfaceElevated,
+                        contentColor = TextPrimary
+                    ),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = {
-                            printThermalReport(
-                                context = context,
-                                reportTitle = "TINDA_${report.zReadNumber}",
-                                printHtml = generateHtmlSlip("OFFICIAL Z-READ REPORT", receiptPlainText, storeProfile)
-                            )
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(44.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, BorderElevated),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = BrandSurfaceElevated,
-                            contentColor = TextPrimary
-                        ),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
-                    ) {
-                        Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldInteractive)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Print", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            val sendIntent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                putExtra(Intent.EXTRA_TEXT, receiptPlainText)
-                                type = "text/plain"
-                            }
-                            context.startActivity(Intent.createChooser(sendIntent, "Share Z-Read Report"))
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(44.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, BorderElevated),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = BrandSurfaceElevated,
-                            contentColor = TextPrimary
-                        ),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
-                    ) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldInteractive)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Share", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    }
-
-                    Button(
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(44.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
-                    ) {
-                        Text("Done", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    }
+                    Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(18.dp), tint = EmeraldInteractive)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Print", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
+
+                OutlinedButton(
+                    onClick = {
+                        val sendIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, receiptPlainText)
+                            type = "text/plain"
+                        }
+                        context.startActivity(Intent.createChooser(sendIntent, "Share Z-Read Report"))
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp)
+                        .testTag("btn_share_z_read"),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, BorderElevated),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = BrandSurfaceElevated,
+                        contentColor = TextPrimary
+                    ),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(17.dp), tint = EmeraldInteractive)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Share", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .weight(0.9f)
+                        .height(46.dp)
+                        .testTag("btn_done_z_read"),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                ) {
+                    Text("Done", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
+            }
             }
         }
     }

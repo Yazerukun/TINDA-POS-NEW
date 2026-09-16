@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -49,6 +50,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -588,34 +590,78 @@ fun ReportsScreen(
                 colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    // Header with balanced alignment and prominent LIVE RANK pill badge
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Star,
-                                contentDescription = null,
-                                tint = EmeraldPrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Top Selling Products (Bestsellers)",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f, fill = false)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(EmeraldPrimary.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Star,
+                                    contentDescription = null,
+                                    tint = EmeraldPrimary,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "Top Selling Products",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Bestsellers by revenue & volume",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.5.sp
+                                )
+                            }
                         }
-                        Text(
-                            text = "Live Ranked",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = EmeraldPrimary,
-                            fontWeight = FontWeight.SemiBold
-                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Prominent Live Rank indicator
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = EmeraldPrimary.copy(alpha = 0.12f),
+                            border = BorderStroke(1.dp, EmeraldPrimary.copy(alpha = 0.3f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(7.dp)
+                                        .clip(CircleShape)
+                                        .background(EmeraldPrimary)
+                                )
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(
+                                    text = "LIVE RANK",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = EmeraldPrimary,
+                                    letterSpacing = 0.6.sp
+                                )
+                            }
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     if (reportsState.topSellingItems.isEmpty()) {
                         Text(
@@ -628,7 +674,7 @@ fun ReportsScreen(
                         reportsState.topSellingItems.forEachIndexed { index, item ->
                             TopSellingItemRow(rank = index + 1, item = item)
                             if (index < reportsState.topSellingItems.size - 1) {
-                                Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
                             }
                         }
                     }
@@ -1100,72 +1146,99 @@ fun ReportsScreen(
 
 @Composable
 fun TopSellingItemRow(rank: Int, item: TopSellingItem) {
-    val rankColor = when (rank) {
-        1 -> Color(0xFFFFB300) // Gold
-        2 -> Color(0xFF90A4AE) // Silver
-        3 -> Color(0xFFCD7F32) // Bronze
-        else -> MaterialTheme.colorScheme.outline
+    val (rankBadgeBg, rankBadgeBorder, rankBadgeText) = when (rank) {
+        1 -> Triple(Color(0xFFFEF3C7), Color(0xFFF59E0B), Color(0xFFB45309)) // Gold
+        2 -> Triple(Color(0xFFF1F5F9), Color(0xFF94A3B8), Color(0xFF334155)) // Silver
+        3 -> Triple(Color(0xFFFFEDD5), Color(0xFFFB923C), Color(0xFFC2410C)) // Bronze
+        else -> Triple(Color(0xFFF8FAFC), Color(0xFFCBD5E1), Color(0xFF64748B))
     }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clip(CircleShape)
-                        .background(rankColor.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
+                // Rank Badge + Product Name & Volume
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
                 ) {
+                    Surface(
+                        modifier = Modifier.size(34.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        color = rankBadgeBg,
+                        border = BorderStroke(1.dp, rankBadgeBorder)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = "#$rank",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Black,
+                                color = rankBadgeText
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = item.productName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "${item.quantitySold} units sold  •  ${String.format(Locale.US, "%.1f", item.percentageOfSales)}% share",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.5.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                // Prominent Gross Sales Column (Crystal clear & high readability)
+                Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "$rank",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = rankColor
+                        text = "Gross Sales",
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                    Text(
+                        text = "₱${String.format(Locale.US, "%,.2f", item.totalRevenue)}",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Black,
+                        color = EmeraldPrimary
                     )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = item.productName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
             }
 
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "₱${String.format(Locale.US, "%.2f", item.totalRevenue)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = EmeraldPrimary
-                )
-                Text(
-                    text = "${item.quantitySold} sold (${String.format(Locale.US, "%.0f", item.percentageOfSales)}%)",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 10.sp
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Percentage bar
+            LinearProgressIndicator(
+                progress = { (item.percentageOfSales / 100.0).toFloat().coerceIn(0f, 1f) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(5.dp)
+                    .clip(RoundedCornerShape(3.dp)),
+                color = EmeraldPrimary,
+                trackColor = EmeraldPrimary.copy(alpha = 0.12f)
+            )
         }
-        Spacer(modifier = Modifier.height(4.dp))
-        LinearProgressIndicator(
-            progress = { (item.percentageOfSales / 100.0).toFloat().coerceIn(0f, 1f) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(4.dp)
-                .clip(RoundedCornerShape(2.dp)),
-            color = EmeraldPrimary,
-            trackColor = EmeraldPrimary.copy(alpha = 0.12f)
-        )
     }
 }
 

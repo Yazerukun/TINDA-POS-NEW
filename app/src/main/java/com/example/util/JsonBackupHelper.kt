@@ -29,13 +29,7 @@ data class StoreBackupData(
 
 object JsonBackupHelper {
 
-    fun createBackupFile(context: Context, backup: StoreBackupData): File {
-        val backupDir = File(context.cacheDir, "backups")
-        if (!backupDir.exists()) backupDir.mkdirs()
-
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-        val file = File(backupDir, "Tinda_Backup_$timestamp.json")
-
+    fun backupToJsonString(backup: StoreBackupData): String {
         val root = JSONObject()
         root.put("version", 1)
         root.put("exportDate", backup.exportDate)
@@ -123,7 +117,17 @@ object JsonBackupHelper {
         }
         root.put("debtRecords", debtArray)
 
-        file.writeText(root.toString(2))
+        return root.toString(2)
+    }
+
+    fun createBackupFile(context: Context, backup: StoreBackupData): File {
+        val backupDir = File(context.cacheDir, "backups")
+        if (!backupDir.exists()) backupDir.mkdirs()
+
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val file = File(backupDir, "Tinda_Backup_$timestamp.json")
+
+        file.writeText(backupToJsonString(backup))
         return file
     }
 

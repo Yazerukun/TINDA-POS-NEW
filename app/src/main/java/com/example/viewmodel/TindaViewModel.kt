@@ -13,6 +13,7 @@ import com.example.data.SaleTransaction
 import com.example.data.StockMovement
 import com.example.data.TindaRepository
 import com.example.data.ZReadReport
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -476,8 +477,29 @@ class TindaViewModel(application: Application) : AndroidViewModel(application) {
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), RealtimeReportsState())
 
+    fun triggerAutoSafetyBackup() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val backup = exportStoreBackupData()
+                com.example.util.PersistentSafetyVault.saveVault(getApplication(), backup)
+            } catch (e: Exception) {
+                // Background safety backup caught silently
+            }
+        }
+    }
+
     init {
         viewModelScope.launch {
+            if (com.example.util.PersistentSafetyVault.hasVault(getApplication())) {
+                val pCount = repository.getProductCount()
+                if (pCount == 0) {
+                    val vaultData = com.example.util.PersistentSafetyVault.loadVault(getApplication())
+                    if (vaultData != null && (vaultData.products.isNotEmpty() || vaultData.sales.isNotEmpty())) {
+                        restoreStoreBackupData(vaultData)
+                        return@launch
+                    }
+                }
+            }
             repository.initDefaultDataIfNeeded()
         }
     }
@@ -618,6 +640,7 @@ class TindaViewModel(application: Application) : AndroidViewModel(application) {
             )
             _lastCompletedSale.value = sale
             clearCart()
+            triggerAutoSafetyBackup()
             onSuccess(sale)
         }
     }
@@ -667,24 +690,28 @@ class TindaViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 )
             }
+            triggerAutoSafetyBackup()
         }
     }
 
     fun updateProductExpiryDate(productId: Long, expiryDate: Long?) {
         viewModelScope.launch {
             repository.updateProductExpiry(productId, expiryDate)
+            triggerAutoSafetyBackup()
         }
     }
 
     fun restockProduct(productId: Long, addedQty: Int, notes: String) {
         viewModelScope.launch {
             repository.restockProduct(productId, addedQty, notes)
+            triggerAutoSafetyBackup()
         }
     }
 
     fun deleteProduct(product: Product) {
         viewModelScope.launch {
             repository.deleteProduct(product)
+            triggerAutoSafetyBackup()
         }
     }
 
@@ -711,6 +738,7 @@ class TindaViewModel(application: Application) : AndroidViewModel(application) {
                     addressOrNote = note.trim()
                 )
             )
+            triggerAutoSafetyBackup()
         }
     }
 
@@ -720,6 +748,7 @@ class TindaViewModel(application: Application) : AndroidViewModel(application) {
             // Refresh customer
             val updated = database.customerDao().getCustomerById(customerId)
             _selectedCustomer.value = updated
+            triggerAutoSafetyBackup()
         }
     }
 
@@ -728,6 +757,7 @@ class TindaViewModel(application: Application) : AndroidViewModel(application) {
             repository.addCustomerDebt(customerId, amount, notes)
             val updated = database.customerDao().getCustomerById(customerId)
             _selectedCustomer.value = updated
+            triggerAutoSafetyBackup()
         }
     }
 
@@ -901,6 +931,7 @@ class TindaViewModel(application: Application) : AndroidViewModel(application) {
 
             val id = repository.insertZRead(zReport)
             val savedReport = zReport.copy(id = id)
+            triggerAutoSafetyBackup()
             onCompleted(savedReport)
         }
     }

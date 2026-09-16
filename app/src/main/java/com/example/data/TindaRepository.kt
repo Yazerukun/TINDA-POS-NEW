@@ -23,6 +23,8 @@ class TindaRepository(private val database: AppDatabase) {
     val recentStockMovements: Flow<List<StockMovement>> = stockMovementDao.getRecentMovements()
     val allZReads: Flow<List<ZReadReport>> = zReadReportDao.getAllZReads()
 
+    suspend fun getProductCount(): Int = withContext(Dispatchers.IO) { productDao.getProductCount() }
+
     suspend fun initDefaultDataIfNeeded() = withContext(Dispatchers.IO) {
         if (productDao.getProductCount() == 0) {
             productDao.insertAll(SampleData.initialProducts)
